@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<title>Кластеризация на основе индексов</title>
+
+<xmp theme="united" style="display:none;">
+
+Скорость извлечения данных из базы ограничивается скоростью чтения данных
+с жёсткого диска за исключением небольших баз, способных полностью помещаться в
+оперативную память.
+
+Один из способов повысить скорость доступа к данным - это обеспечить им такой
+порядок хранения на диске, чтобы записи, которые вероятнее всего
+будут запрашиваться одновременно, физически находились рядом. Этот процесс
+называется **кластеризация**.
+
+![][01-postgis-03]
+![][01-postgis-04]
+
+В качестве признака схожести данных можно использовать значение
+пространственного индекса:
+
+    CLUSTER building_polygon USING building_polygon_geom_idx;
+
+Однако как показывает практика это не совсем удачный критерий для
+кластеризации, а в качестве такового лучше использовать
+хэш-строку геометрии, рассчитанную с использованием алгоритма
+[Geohash](http://en.wikipedia.org/wiki/Geohash). Особенностью данного
+алгоритма является тот факт, что его хэши обладают свойством упорядоченности.
+В частности, хэш точки внутри прямоугольника будет находится между хэшами
+углов этого прямоугольника. Выполним следующие запросы для построения
+индекса:
+
+    CREATE INDEX building_polygon_geom_geohash_idx ON building_polygon (ST_GeoHash(ST_Transform(wkb_geometry,4326)));
+    CREATE INDEX water_polygon_geom_geohash_idx ON water_polygon (ST_GeoHash(ST_Transform(wkb_geometry,4326)));
+    CREATE INDEX highway_line_geom_geohash_idx ON highway_line (ST_GeoHash(ST_Transform(wkb_geometry,4326)));
+    CREATE INDEX railway_station_point_geom_geohash_idx ON railway_station_point (ST_GeoHash(ST_Transform(wkb_geometry,4326)));
+
+А затем проведём кластеризацию:
+
+    CLUSTER building_polygon USING building_polygon_geom_geohash_idx;
+    CLUSTER water_polygon USING water_polygon_geom_geohash_idx;
+    CLUSTER highway_line USING highway_line_geom_geohash_idx;
+    CLUSTER railway_station_point USING railway_station_point_geom_geohash_idx;
+
+
+[01-postgis-03]: ../img/01-postgis-03.jpg
+[01-postgis-04]: ../img/01-postgis-04.jpg
+
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

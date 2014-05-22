@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<title>Работа с проекциями</title>
+
+<xmp theme="united" style="display:none;">
+
+Не существует единственного правильного способа отобразить
+объекты, расположенные на сферической поверхности Земли, на бумажной
+карте или на экране монитора. Для решения данной задачи были разработаны
+различные проекции, каждая из которых имеет свои плюсы и минусы. Одни проекции
+сохраняют площади, другие - углы, третьи - расстояния и т.д.
+
+Для получения **SRID** (Spatial Reference System Identifier) геометрии существует
+функция **ST_SRID()**. Выполните следующую команду:
+
+
+    SELECT ST_SRID(wkb_geometry) FROM building_polygon LIMIT 1;
+
+В ответ вы должны получить *4326* - это ключ таблицы `spatial_ref_sys`, то есть
+чтобы просмотреть описание проекции в которой находится геометрия, достаточно
+выполнить команду:
+
+    SELECT * FROM spatial_ref_sys WHERE srid = 4326;
+
+PostGIS при операциях перепроецирования использует значение поля `proj4text`:
+
+    SELECT proj4text FROM spatial_ref_sys WHERE srid = 4326;
+
+Для перепроецирования данных используется функция **ST_Transform(geometry, srid)**.
+Отобразим текстовое представление наших данных в проекции Меркатора:
+
+    SELECT ST_AsText(wkb_geometry) "original", ST_AsText(ST_Transform(wkb_geometry, 3857)) "transformed" FROM building_polygon LIMIT 10;
+
+Необходимо всегда помнить о перепроецировании, при выполнении различных
+операций, связанных с измерениями (длин, площадей и т.п.).
+
+Геометрии и SRID
+----------------
+
+PostGIS позволяет хранить ссылку на SRID прямо в самом поле геометрии. Поэтому
+если мы выполняем запрос:
+
+    SELECT ST_Transform(wkb_geometry, 3857) FROM building_polygon WHERE ogc_fid = 1;
+
+он выполняется корректно, так как в поле wkb_geometry уже *зашита* инофрмация
+о SRID. Это можно проверить, выполнив запрос:
+
+    SELECT ST_SRID(wkb_geometry) FROM building_polygon WHERE ogc_fid = 1;
+ 
+который должен вернуть ответ:
+
+    4326
+
+Также проверку можно выполнить следующим образом, запросив геометрию в формате
+EWKT:
+
+    SELECT ST_AsEWKT(wkb_geometry) FROM building_polygon WHERE ogc_fid = 1;
+
+Данный запрос вернёт:
+
+    SRID=4326;MULTIPOLYGON(((29.4424509 60.1757187,29.4425092 60.1758288,29.4427096 60.1758025,29.4426514 60.1756925,29.4424509 60.1757187)))
+
+А теперь попробуем перепроецировать геометрию из таблицы `geometries`:
+
+    SELECT ST_Transform(geom, 3857) FROM geometries WHERE name='Point';
+
+Данная операция приведёт к ошибке:
+
+    ERROR: Input geometry has unknown SRID
+
+поскольку указанная геометри не содержит в себе инфомации о SRID, в чем легко убедиться
+выполнив запрос с использованием функции ST_SRID.
+
+В этом случае, если мы захотим перепроецировать данные из неизвестной
+системы координат, то вначале должны будем явно указать исходную проекцию
+геометрии:
+
+    SELECT ST_Transform(ST_SetSRID(geom, 4326), 3857) FROM geometries WHERE name='Point';
+    
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

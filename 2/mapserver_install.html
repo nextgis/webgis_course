@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<title>Установка MapServer в Debian GNU/Linux 7.0</title>
+
+<xmp theme="united" style="display:none;">
+
+![][02-mapserver-01]
+
+Установка Web-сервера Apache
+----------------------------
+
+Для установки Web-сервера Apache выполняем следующую команду (на том же хосте,
+где запущен PostgreSQL):
+
+    sudo aptitude install apache2
+
+Чтобы убедиться в том, что Apache установился корректно, перейдите в браузере
+по адресу `http://IP-адрес Web-сервера`. Дожна отобразиться страница, содержащая
+следующий текст:
+
+    It works!
+    This is the default web page for this server.
+    The web server software is running but no content has been added, yet
+
+Установка MapServer
+-------------------
+
+Для установки MapServer выполним следующую команду:
+
+    sudo aptitude install cgi-mapserver mapserver-bin
+
+Чтобы убедиться в том, что MapServer установился корректно, перейдите в браузере
+по адресу `http://IP-адрес Web-сервера/cgi-bin/mapserv`. Должна отобразиться
+страница, содержащая следующий текст:
+
+    No query information to decode. QUERY_STRING is set, but empty.
+
+[02-mapserver-01]: ../img/02-mapserver-01.png
+
+</xmp>
+
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

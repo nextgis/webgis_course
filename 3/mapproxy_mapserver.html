@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<title>Непосредственный вызов рендереров из Mapproxy</title>
+
+<xmp theme="united" style="display:none;">
+
+Mapproxy поддерживает непосредственный вызов рендереров **MapServer** и
+**Mapnik**. Рассмотрим вариант прямого обращения к MapServer. Обратите внимание,
+что в данном примере мы используем отличный от `wms` тип источника данных, а
+именно `mapserver`. Кроме того, мы не указываем URL WMS-сервиса, а непосредственно
+передаём в MapProxy ссылку на map-файл и на исполняемый файл `mapserv`.
+
+    services:
+      demo:
+      tms:
+      wms:
+        md: 
+          title: MapProxy WMS Server
+
+    sources:
+      mapserver_src:
+        type: mapserver
+        req:
+          layers: water,building
+          map: /home/rykov/nextgis/vega2013/wms.map
+          transparent: true
+        mapserver:
+          binary: /usr/lib/cgi-bin/mapserv
+          working_dir: /home/rykov/nextgis/vega2013
+
+    grids:
+      gridmerc:
+        base: GLOBAL_MERCATOR
+        srs: EPSG:3857
+
+    caches:
+      ex3_cache:
+        cache:
+            type: mbtiles
+            filename: /home/rykov/nextgis/vega2013/vegamapproxy/cache_data/ex3.mbtiles
+        sources: [mapserver_src]
+        grids: [gridmerc]
+
+    layers:
+      - name: merged_layer
+        title: Пример непосредственного вызова рендерера
+        sources: [ex3_cache]
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<title>Создание WFS-сервиса на базе MapServer</title>
+
+<xmp theme="united" style="display:none;">
+
+Структура приложений на базе MapServer
+--------------------------------------
+
+Следующее изображение отображает структуру приложений, построенных
+на базе MapServer:
+
+![][02-mapserver-architecture]
+
+Публикация данных по WFS
+------------------------
+
+Документация по настройке WFS-сервера на базе MapServer доступна
+на странице официальной документации [WFS Server](http://mapserver.org/ogc/wfs_server.html).
+
+MapServer предоставляет возможность публиковать данные по протоколу WFS, но не 
+WFS-T (с возможностью изменения данных). Такую возможность предоставляет другой
+WFS-сервер [TinyOWS](http://mapserver.org/tinyows/index.html), позволяющий
+публиковать данные PostGIS в виде WFS-T-сервисов. Небольшое руководство
+по работе с TinyOWS можно найти [здесь](http://gis-lab.info/docs/gisconf/rykov/workshop_wfs.html).
+
+Для публикации данных в виде WFS-сервиса создайте файл следующего содержания
+(заменив путь до map-файла на собственный):
+
+    MAP
+
+      NAME "Vega WFS Server"
+
+      WEB
+        METADATA
+          "wfs_title"          "WFS Demo Server for MapServer"
+          "wfs_onlineresource" "http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&"
+          "wfs_srs"            "EPSG:4326 EPSG:3857"
+          "wfs_abstract"       "Saint Petersburg demo WFS"
+          "wfs_enable_request" "*"
+          "wfs_encoding"       "utf-8"
+         END
+      END
+
+      LAYER
+        NAME "water"
+        EXTENT -180 -180 180 180
+        METADATA
+          "wfs_title"         "Водоёмы"
+          "gml_include_items" "all"
+          "gml_featureid"     "ogc_fid"
+          "wfs_enable_request" "*"
+        END
+        TYPE POLYGON
+        CONNECTIONTYPE postgis
+        CONNECTION "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA "wkb_geometry from water_polygon"
+        PROJECTION
+          "init=epsg:4326"
+        END
+      END
+
+      LAYER
+        NAME "building"
+        EXTENT -180 -180 180 180
+        METADATA
+          "wfs_title"         "Здания"
+          "gml_include_items" "all"
+          "gml_featureid"     "ogc_fid"
+          "wfs_enable_request" "*"
+        END
+        TYPE POLYGON
+        CONNECTIONTYPE postgis
+        CONNECTION "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA "wkb_geometry from building_polygon"
+        PROJECTION
+          "init=epsg:4326"
+        END
+      END
+
+      LAYER
+        NAME "highway"
+        EXTENT -180 -180 180 180
+        METADATA
+          "wfs_title"         "Дороги"
+          "gml_include_items" "all"
+          "gml_featureid"     "ogc_fid"
+          "wfs_enable_request" "*"
+        END
+        TYPE LINE
+        CONNECTIONTYPE postgis
+        CONNECTION "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA "wkb_geometry from highway_line"
+        PROJECTION
+          "init=epsg:4326"
+        END
+      END
+
+      LAYER
+        NAME "railway_station"
+        EXTENT -180 -180 180 180
+        METADATA
+          "wfs_title"         "Железнодорожные станции"
+          "gml_include_items" "all"
+          "gml_featureid"     "ogc_fid"
+          "wfs_enable_request" "*"
+        END
+        TYPE POINT
+        CONNECTIONTYPE postgis
+        CONNECTION "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA "wkb_geometry from railway_station_point"
+        PROJECTION
+          "init=epsg:4326"
+        END
+      END
+
+    END
+
+* **wfs_title** - обязательный параметр, человекочитаемы идентификатор сервера/слоя;
+* **wfs_onlineresource** - рекомендуемый параметр, URL-префикс для HTTP GET запросов;
+* **wfs_srs** - список систем координат в которых доступны слои на сервере;
+* **wfs_abstract** - краткое описание сервера;
+* **wfs_enable_request** - список поддерживаемых запросов (*GetCapabilities*,
+  *GetFeature* и *DescribeFeatureType*):
+      "wfs_enable_request" "GetCapabilities GetFeature"
+      "wfs_enable_request" "* !GetCapabilities"
+* **wfs_encoding** - кодировка XML-документа, возвращаемого сервером;
+* **gml_include_items** - список возвращаемых атрибутов:
+      "gml_include_items" "osm_id, name"
+* **gml_featureid** - имя поля первичного ключа;
+
+[02-mapserver-architecture]: ../img/02-mapserver-architecture.png
+
+</xmp>
+
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<title>Работа с данными OSM при помощи Osmosis</title>
+
+<xmp theme="united" style="display:none;">
+
+Osmosis представляет из себя довольно гибкий инструмент работы с данными OSM.
+Часть задач в инфраструктуре проекта, в том числе формирование ежедневных дампов
+на planet.osm.org решается с помощью него. Инструмент нацелен в первую очередь
+на поточную обработку данных. Полная документация расположена в [вики
+OpenStreetMap](http://wiki.openstreetmap.org/wiki/Osmosis/Detailed_Usage_0.41).
+Рассмотрим несколько примеров обработки данных.
+
+### Конвертация из формата OSM XML в OSM PBF
+
+    $ osmosis --read-xml RU-LEN.osm.bz2 --write-pbf RU-LEN.osm.pbf
+
+### Вырезка небольшого фрагмента данных
+
+    $ osmosis --read-xml RU-LEN.osm.bz2 \
+        --bounding-box left=29.5 right=30.5 top=59.5 bottom=58.5 \
+        --write-xml SPB.osm.bz2
+
+**Задача:** Загрузить получившийся файл в БД при помощи osm2pgsql и подключить в
+QGIS всю таблицу planet\_osm\_line, чтобы убедиться, что обрезка действительно
+выполнена.
+
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

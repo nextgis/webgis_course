@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<title>Установка MapProxy в Debian GNU/Linux 7.0</title>
+
+<xmp theme="united" style="display:none;">
+
+Кэширующий тайловый сервер MapProxy
+-----------------------------------
+
+![][03-mapproxy-01]
+
+[03-mapproxy-01]: ../img/03-mapproxy-01.png
+
+**Особенности:**
+
+* Библиотека на Python
+* Конфигурируется файлом **YAML**
+* Форматы источников: **WMS**, **TMS**, **Mapnik**, **MapServer**
+* Форматы сервисов: **WMS**, **WMTS**, **TMS**, **KML Superoverlay**
+* Форматы хранения данных: **файлы (TMS)**, **mbtiles**, **couchdb**
+
+Установка MapProxy
+------------------
+
+MapProxy рекомендуется устанавливат в отдельное [виртуальное окружение](http://guide.python-distribute.org/virtualenv.html):
+
+    sudo aptitude install python-virtualenv
+    cd ~
+    virtualenv mapproxy
+
+Зависимости:
+
+    sudo aptitude install python-imaging python-yaml libproj0 python-dev
+
+Опциональные пакеты:
+
+    sudo aptitude install libgeos-dev python-lxml libgdal-dev python-shapely
+
+Для корректной конфигурации PIL необходимо создать симлинки вида:
+
+    sudo ln -s /usr/lib/`uname -i`-linux-gnu/libfreetype.so /usr/lib/
+    sudo ln -s /usr/lib/`uname -i`-linux-gnu/libjpeg.so /usr/lib/
+    sudo ln -s /usr/lib/`uname -i`-linux-gnu/libz.so /usr/lib/
+
+Если на вашей системе команда `uname -i` возвращает `unknow`, то определите
+имя каталога самостоятельно:
+
+    sudo ln -s /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib
+    sudo ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib
+    sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib
+
+Если какого-то из `*.so` файлов нет в системе, установите соответствующий
+пакет, например:
+
+    sudo aptitude install libfreetype6-dev
+    sudo aptitude install libjpeg8-dev
+    sudo aptitude install zlib1g-dev
+
+Установка MapProxy:
+
+    cd ~
+    source mapproxy/bin/activate
+    pip install https://github.com/mapproxy/mapproxy/tarball/master
+
+Просмотрите результат вывода установщика в консоли на предмет того, что PIL
+собран с поддержкой **ZLIB**, **JPEG** и **FREETYPE2**.
+
+    --------------------------------------------------------------------
+    PIL 1.1.7 SETUP SUMMARY
+    --------------------------------------------------------------------
+    version       1.1.7
+    platform      linux2 2.7.3 (default, Jan  2 2013, 13:56:14)
+                  [GCC 4.7.2]
+    --------------------------------------------------------------------
+    *** TKINTER support not available
+    --- JPEG support available
+    --- ZLIB (PNG/ZIP) support available
+    --- FREETYPE2 support available
+    *** LITTLECMS support not available
+    --------------------------------------------------------------------
+
+Чтобы убедиться, что MapProxy установился корректно, выполните команду:
+
+    mapproxy-util --version
+
+Должна отобразиться версия MapProxy:
+
+    MapProxy 1.6.0a-20130202
+
+Создание файлов настройки
+-------------------------
+
+Выполните команду:
+
+    mapproxy-util create -t base-config mymapproxy
+
+В вашем домашнем каталоге будет создан каталог **mymapproxy**
+с примерами конфигурационных файлов **mapproxy.yaml** и **seed.yaml**.
+
+Запуск тестового сервера
+------------------------
+
+    cd mymapproxy
+    mapproxy-util serve-develop -b 0.0.0.0 mapproxy.yaml
+
+Запустится сервер, публикующий данные с Omniscale OpenStreetMap WMS.
+В MapProxy входит служебный сервис `demo`, позволяющий просматривать
+список всех опубликованных WMS и TMS слоёв. Доступ к нему
+можно получить перейдя по адресу:
+
+    http://10.22.0.9:8080/demo
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

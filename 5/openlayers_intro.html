@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<title>Основы OpenLayers, добавление слоя WMS</title>
+
+<xmp theme="united" style="display:none;">
+
+Библиотека [OpenLayers](http://openlayers.org/) позволяет очень быстро и
+легко создать web-интерфейс для отображения картографических материалов,
+представленных в различных форматах и расположенных на различных серверах.
+Благодаря OpenLayers разработчик имеет возможность создать, к примеру, собственную карту,
+включающую слои, предоставляемые WMS (и WFS) серверами, такими как Mapserver
+или Geoserver, и данными картографических сервисов, например, OpenStreetMap.
+
+Создание простейшей карты
+-------------------------
+
+Создайте файл и поместите в него следующий фрагмент кода, после чего откройте его
+в браузере. Данный код будет одинаково работоспособным как на локальной машине,
+так и на Web-сервере.
+
+    <html>
+        <head>
+            <title>My Map</title>
+            <script src="http://openlayers.org/dev/OpenLayers.js"></script>
+            <script>
+                function init() {
+                    var options = {
+                        div: "mapid",
+                        projection: "EPSG:3857"
+                    };
+
+                    var map = new OpenLayers.Map(options);
+                    var osm = new OpenLayers.Layer.OSM()
+                    var imagery = new OpenLayers.Layer.WMS(
+                        "Sattelite Image of St. Petersburg",
+                        "http://10.22.0.9/cgi-bin/wms",
+                        {layers: "sattelite_image", transparent: true},
+                        {isBaseLayer: false, opacity: 0.9}
+                    );
+                    var extent = [3322236.017526,8366084.2704585,3418852.421265,8395053.9041745];
+                    map.addLayers([osm, imagery]);
+                    map.zoomToExtent(extent);
+                }
+            </script>
+        </head>
+        <body>
+            <body onload="init()">
+            <div id="mapid" style="width:100%; height:100%"></div>
+        </body>
+    </html>
+
+Любая карта OpenLayers создаётся в отдельном блоке `<div>`. В нашем случае
+данный блок имеет идентификатор `id="mapid"`, который используется при создании
+объекта карты.
+
+Размер блока карты настраивается с помощью CSS. В данном пример использовался
+инлайновый способ описания стиля блока `style="width:100%; height:100%"`,
+данная запись означает, что карта будет занимать 100% ширины и высоты экрана.
+
+Основной элемент карты - объект класса `OpenLayers.Map`, являющийся контейнером
+для слоёв и контролов. В данном примере была создана карта `map`, на которую
+был добавлен WMS-слой и слой OpenStreetMap, после чего был выполнен зум на
+территорию г. Санкт-Петербург.
+
+![][05-openlayers-01]
+
+[05-openlayers-01]: ../img/05-openlayers-01.png
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

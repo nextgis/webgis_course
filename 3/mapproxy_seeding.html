@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<title>Предварительное кэширование данных</title>
+
+<xmp theme="united" style="display:none;">
+
+По умолчанию MapProxy создаёт и кэширует тайлы *на лету*, то есть по запросу.
+Для увеличения производительности имеется возможность подготовить кэш
+тайлов заблаговременно. Для этого используется утилита `mapproxy-seed`,
+позволяющая закэшировать определенные масштабные уровни и определенные
+фрагменты того или иного слоя.
+
+Основные параметры утилиты:
+
+* `-s <seed.yaml>`
+  
+  Конфигурационный файл, содержащий параметры предварительного кэширования
+  (сидирования);
+
+* `-f <mapproxy.yaml>`
+
+  Конфигурационный файл, содержащий описание слоёв, кэшей и гридов на которые
+  будет ссылаться файл конфигурации сидирования;
+
+* `-n`
+
+  Имитация процесса кэширования без запроса, создания и удаления тайлов;
+
+* `--summary`
+
+  Краткое описание задач, представленных в файле конфигурации;
+
+* `--seed=<task1,task2,..>`
+
+   Принудительное выполненние только задач сидирования. Для выполнения всех
+   задач сидирования используется параметр *ALL*;
+
+* `--cleanup=<task1,task2,..>`
+
+  Принудительное выполненние только задач очистки кэша. Для выполнения всех
+  задач очистки кэша используется параметр *ALL*;
+
+Пример выполнения команды:
+
+    mapproxy-seed -f mapproxy.yaml -s seed.yaml -c 2 --seed task1,task2 --cleanup task3
+
+
+Структура файла сидирования
+---------------------------
+
+Файл сидирования состоит из 3 разделов:
+
+* *seeds* - задачи сидирования;
+* *cleanups* - задачи очистки;
+* *coverages* - конфигурация покрытий, используемых в задачах
+  сидирования и очистки;
+
+
+    seeds:
+      myseed1:
+        [...]
+      myseed2
+        [...]
+
+    cleanups:
+      mycleanup1:
+        [...]
+      mycleanup2:
+        [...]
+
+    coverages:
+      mycoverage1:
+        [...]
+      mycoverage2:
+        [...]
+
+Пример описания задач сидирования
+---------------------------------
+
+    seeds:
+      myseed1:
+        caches: [ex1_cache]
+        coverages: spb
+        grids: [gridmerc]
+        levels:
+          to: 10
+
+      myseed2:
+        caches: [ex1_cache]
+        coverages: [gridmerc]
+        grids: [gridmerc]
+        refresh_before:
+          weeks: 3
+        levels:
+          from: 11
+          to: 15
+
+Пример описания задач очистки кэша
+----------------------------------
+
+    cleanups:
+      mycleanup1:
+        caches: [ex1_cache]
+        grids: [gridmerc]
+      mycleanup2:
+        caches: [ex1_cache]
+        grids: [gridmerc]
+        remove_before:
+          days: 14
+
+Пример описания покрытий
+------------------------
+
+    coverages:
+      spb:
+        bbox: [29.5089,59.6768,30.7204,60.2201]
+        bbox_srs: 'EPSG:4326'
+
+
+Создайте файл с описанием задач кэширования и сидирования, выполните задачу
+удаления кэша и убедитесь в том, что он очистился, затем снова его создайте,
+выполнив задачу по созданию.
+
+    seeds:
+      myseed1:
+        caches: [ex1_cache]
+        grids: [gridmerc]
+        levels:
+          to: 10
+
+      myseed2:
+        caches: [ex1_cache]
+        coverages: [spb]
+        grids: [gridmerc]
+        refresh_before:
+          weeks: 3
+        levels:
+          from: 11
+          to: 15
+
+    cleanups:
+      mycleanup1:
+        caches: [ex1_cache]
+        grids: [gridmerc]
+      mycleanup2:
+        caches: [ex1_cache]
+        grids: [gridmerc]
+        remove_before:
+          days: 14
+
+    coverages:
+      spb:
+        bbox: [29.5089,59.6768,30.7204,60.2201]
+        bbox_srs: 'EPSG:4326'
+
+Команды:
+  
+    mapproxy-seed -f mapproxy_ex1.yaml -s seed.yaml -c 2 --cleanup mycleanup1
+    mapproxy-seed -f mapproxy_ex1.yaml -s seed.yaml -c 2 --seed myseed1
+
+
+
+
+
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

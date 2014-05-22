@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<title>Подготовка растров</title>
+
+<xmp theme="united" style="display:none;">
+
+Исследование метаданных целевого растра
+---------------------------------------
+
+Предположим, у нас есть некоторый растровый файл
+`03JUL16085548-P1BS-005556767010_01_P001.TIF`, который мы хотим опубликовать.
+Прежде всего следует изучить его метаданные, чтобы иметь представление с чем
+мы имеем дело. Для этого воспользуемся утилитой [gdalinfo](http://www.gdal.org/gdalinfo.html),
+входящей в состав пакета *gdal-bin*, установленного на одном из предыдущих занятий:
+
+    $ gdalinfo 03JUL16085548-P1BS-005556767010_01_P001.TIF
+    Driver: GTiff/GeoTIFF
+    Files: 03JUL16085548-P1BS-005556767010_01_P001.TIF
+    Size is 27552, 26796
+    Coordinate System is `'
+    GCP Projection = 
+    GEOGCS["WGS 84",
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
+        PRIMEM["Greenwich",0],
+        UNIT["degree",0.0174532925199433],
+        AUTHORITY["EPSG","4326"]]
+    GCP[  0]: Id=1, Info=
+              (0.5,0.5) -> (30.1051981842051,60.0089939734874,0)
+    GCP[  1]: Id=2, Info=
+              (27551.5,0.5) -> (30.4585000809603,59.9884694606044,0)
+    GCP[  2]: Id=3, Info=
+              (27551.5,26795.5) -> (30.4546004126985,59.7973406892954,0)
+    GCP[  3]: Id=4, Info=
+              (0.5,26795.5) -> (30.103559782302,59.8185308232509,0)
+    Metadata:
+      AREA_OR_POINT=Area
+      TIFFTAG_COPYRIGHT=(C) COPYRIGHT 2006 DigitalGlobe, Inc., Longmont CO USA 80503
+      TIFFTAG_DATETIME=2006:06:19 03:40:38
+      TIFFTAG_IMAGEDESCRIPTION={
+      bandList = 
+      [
+        5;
+      ]
+    }
+      TIFFTAG_MAXSAMPLEVALUE=2047
+      TIFFTAG_MINSAMPLEVALUE=1
+    Image Structure Metadata:
+      INTERLEAVE=BAND
+    Corner Coordinates:
+    Upper Left  (    0.0,    0.0)
+    Lower Left  (    0.0,26796.0)
+    Upper Right (27552.0,    0.0)
+    Lower Right (27552.0,26796.0)
+    Center      (13776.0,13398.0)
+    Band 1 Block=27552x19 Type=UInt16, ColorInterp=Gray
+
+Как можно видеть из этой информации - мы имеем дело с одноканальным
+растром размера `27552x26796`, допривязанного по 4 точкам
+(GCP - Ground Control Point).
+
+Трансформация растра
+--------------------
+
+Наличия GCP в растрах, предназначенных для публикации в Web, следует избегать,
+так как сервер каждый раз будет пересчитывать исходный растр в соответствии с
+GCP. Для этого необходимо пересчитать расположение точек исходного растра
+с помощью утилиты [gdalwarp](http://www.gdal.org/gdalwarp.html):
+
+    gdalwarp -s_srs EPSG:4326 -t_srs EPSG:3857 -srcnodata 0 -dstnodata 0 -r lanczos -of GTiff -co TILED=YES 03JUL16085548-P1BS-005556767010_01_P001.TIF spb_merc.tif
+
+Одновременно с *варпингом* перепроецируем растр в ту проекцию, в которой
+планируется его публикация, а именно `EPSG:3857`. Теперь посмотрим, что у
+нас получилось:
+
+    $gdalinfo spb_merc.tif
+    Driver: GTiff/GeoTIFF
+    Files: spb_merc.tif
+    Size is 24897, 29606
+    Coordinate System is:
+    PROJCS["WGS 84 / Pseudo-Mercator",
+        GEOGCS["WGS 84",
+            DATUM["WGS_1984",
+                SPHEROID["WGS 84",6378137,298.257223563,
+                    AUTHORITY["EPSG","7030"]],
+                AUTHORITY["EPSG","6326"]],
+            PRIMEM["Greenwich",0],
+            UNIT["degree",0.0174532925199433],
+            AUTHORITY["EPSG","4326"]],
+        PROJECTION["Mercator_1SP"],
+        PARAMETER["central_meridian",0],
+        PARAMETER["scale_factor",1],
+        PARAMETER["false_easting",0],
+        PARAMETER["false_northing",0],
+        UNIT["metre",1,
+            AUTHORITY["EPSG","9001"]],
+        EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"],
+        AUTHORITY["EPSG","3857"]]
+    Origin = (3351049.298051952384412,8401778.506833810359240)
+    Pixel Size = (1.587096674171225,-1.587096674171225)
+    Metadata:
+      AREA_OR_POINT=Area
+    Image Structure Metadata:
+      INTERLEAVE=BAND
+    Corner Coordinates:
+    Upper Left  ( 3351049.298, 8401778.507) ( 30d 6'10.76"E, 60d 0'32.99"N)
+    Lower Left  ( 3351049.298, 8354790.923) ( 30d 6'10.76"E, 59d47'51.00"N)
+    Upper Right ( 3390563.244, 8401778.507) ( 30d27'28.61"E, 60d 0'32.99"N)
+    Lower Right ( 3390563.244, 8354790.923) ( 30d27'28.61"E, 59d47'51.00"N)
+    Center      ( 3370806.271, 8378284.715) ( 30d16'49.68"E, 59d54'12.60"N)
+    Band 1 Block=256x256 Type=UInt16, ColorInterp=Gray
+      NoData Value=0
+
+Уменьшение глубины цвета
+------------------------
+
+Как можно увидеть - данный растр представляет собой 16 битный растр. Но для
+задач Web-картографии это излишне высокая глубина цвета, поэтому приведём наше
+изображение к 8 битному с помощью [gdal_translate](http://www.gdal.org/gdal_translate.html):
+
+    gdal_translate -scale -ot Byte spb_merc.tif spb_merc_8bit.tif
+
+Визуально изменений будет практически не заметно, а размер растра при этом
+уменьшился в 2 раза.
+
+Для RGB-растров рекомендуется использовать утилиту [rgb2pct](http://www.gdal.org/rgb2pct.html).
+
+Добавление пирамид
+------------------
+
+Построим пирамиды с помощью утилиты [gdaladdo](http://www.gdal.org/gdaladdo.html):
+
+    gdaladdo spb_merc_8bit.tif 2 4 8 16 32 64 128
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<title>Примеры использования MapProxy</title>
+
+<xmp theme="united" style="display:none;">
+
+Совмещение нескольких слоёв
+---------------------------
+
+В следующем файле приведён пример совмещения двух слоёв, расположенных на
+разных WMS-серверах (MapServer и QGIS Mapserver), в один и его кэширование.
+
+    services:
+      demo:
+      tms:
+      wms:
+        md: 
+          title: MapProxy WMS Server
+
+    sources:
+      mapserver_wms:
+        type: wms
+        req:
+          url: http://localhost/cgi-bin/wms
+          layers: water
+        coverage:
+          bbox: [29.5089,59.6768,30.7204,60.2201]
+          bbox_srs: 'EPSG:4326'
+      qgisserver_wms:
+        type: wms
+        req:
+           url: http://localhost/cgi-bin/qgis_mapserv.fcgi?
+           layers: building_polygon
+           transparent: true
+        coverage:
+          bbox: [29.5089,59.6768,30.7204,60.2201]
+          bbox_srs: 'EPSG:4326'
+
+    grids:
+      gridmerc:
+        base: GLOBAL_MERCATOR
+        srs: EPSG:3857
+
+    caches:
+      ex1_cache:
+        cache:
+            type: file
+            directory_layout: tms
+        sources: [mapserver_wms, qgisserver_wms]
+        grids: [gridmerc]
+
+    layers:
+      - name: merged_layer
+        title: Пример совмещения слоёв из разных источников
+        sources: [ex1_cache]
+
+Если совмещаемые слои расположены на одном WMS-сервере, то их можно совместить
+в самом источнике:
+
+    req:
+      url: http://localhost/cgi-bin/wms
+      layers: water,building_polygon
+
+Совмещение собственных данных с данными тайловых сервисов
+---------------------------------------------------------
+
+    services:
+      demo:
+      tms:
+      wms:
+        md: 
+          title: MapProxy WMS Server
+
+    sources:
+      mapserver_wms:
+        type: wms
+        req:
+          url: http://localhost/cgi-bin/wms
+          layers: railway_station
+          transparent: true
+        coverage:
+          bbox: [29.5089,59.6768,30.7204,60.2201]
+          bbox_srs: 'EPSG:4326'
+      osm_tiles:
+        type: tile
+        grid: osmgrid
+        url: http://c.tile.openstreetmap.org/%(tms_path)s.%(format)s
+
+    grids:
+      gridmerc:
+        base: GLOBAL_MERCATOR
+        srs: EPSG:3857
+      osmgrid:
+        base: GLOBAL_MERCATOR
+        origin: nw
+
+    caches:
+      ex2_cache:
+        cache:
+            type: mbtiles
+            filename: /path/to/bluemarble.mbtiles
+        sources: [osm_tiles,mapserver_wms]
+        grids: [gridmerc]
+        watermark:
+          text:  Vega
+          opacity: 255
+
+    layers:
+      - name: merged_layer
+        title: Совмещение данных WMS с тайловыми данными
+        sources: [ex2_cache]
+
+    globals:
+      cache:
+        meta_size: [1, 1]
+        meta_buffer: 0
+      tiles:
+        expires_hours: 24
+
+Данный конфигурационный файл позволяет опубликовать слой, представляющий
+собой совмещение данных сервиса OpenStreetMap и собственного WMS-сервиса
+(в данном примере использовался слой `railway_station`, опубликованный
+по WMS на базе MapServer).
+
+![][03-mapproxy-03]
+
+[03-mapproxy-03]: ../img/03-mapproxy-03.png
+
+
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

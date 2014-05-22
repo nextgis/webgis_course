@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<title>Использование стратегии кластеризации</title>
+
+
+<xmp theme="united" style="display:none;">
+
+Рассмотрим пример использования стратегии кластеризации. По-умолчанию все
+векторные объекты, расположенные на расстоянии менее 20 пикселов (настраиваемое
+значение) друг от друга будут при отрисовке объединяться в один объект.
+
+    <html>
+        <head>
+            <title>My Map</title>
+            <script src="http://openlayers.org/dev/OpenLayers.js"></script>
+            <script>
+                function init() {
+                    var options = {
+                        div: "mapid",
+                        projection: "EPSG:3857"
+                    };
+
+                    
+                    var style = new OpenLayers.Style({
+                        pointRadius: "${radius}",
+                        fillColor: "#ffcc66",
+                        fillOpacity: 0.8,
+                        strokeColor: "#cc6633",
+                        strokeWidth: 2,
+                        strokeOpacity: 0.8
+                    }, {
+                        context: {
+                            radius: function(feature) {
+                                return Math.min(feature.attributes.count, 7) + 3;
+                            }
+                        }
+                    });
+
+                    var map = new OpenLayers.Map(options);
+                    var osm = new OpenLayers.Layer.OSM()
+                    var buildings = new OpenLayers.Layer.Vector("Buildings", {
+                        strategies: [
+                            new OpenLayers.Strategy.BBOX(),
+                            new OpenLayers.Strategy.Cluster()
+                        ],
+                        protocol: new OpenLayers.Protocol.WFS({
+                            version: "1.0.0",
+                            url: "http://localhost/cgi-bin/wfs",
+                            featureType: "railway_station",
+                            geometryName: "wkb_geometry"
+                        }),
+                        projection: 'EPSG:4326',
+                        styleMap: new OpenLayers.StyleMap({
+                            "default": style,
+                            "select": {
+                                fillColor: "#8aeeef",
+                                strokeColor: "#32a8a9"
+                            }
+                        })
+                    });
+                    var extent = [3322236.017526,8366084.2704585,3418852.421265,8395053.9041745];
+                    map.addLayers([osm, buildings]);
+                    map.zoomToExtent(extent);
+
+                    var ls = new OpenLayers.Control.LayerSwitcher()
+                    map.addControl(ls);
+                }
+            </script>
+        </head>
+        <body>
+            <body onload="init()">
+            <div id="mapid" style="width:100%; height:100%"></div>
+        </body>
+    </html>
+
+Для запроса данных по WFS необходимо, чтобы приложение и WFS-сервис функционировали
+в рамках одного домена, поэтому разместите файл с картой
+на Web-сервере и сделайте на него симлинк в `/var/www/`.
+
+Пример того, что должно получиться в итоге:
+
+![][05-openlayers-02]
+
+[05-openlayers-02]: ../img/05-openlayers-02.png
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

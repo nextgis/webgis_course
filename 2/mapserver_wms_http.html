@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<title>HTTP запросы к WMS-серверу</title>
+
+<xmp theme="united" style="display:none;">
+
+Согласно стандарту WMS-сервер должен поддерживать как минимум 2 запроса:
+
+* **GetCapabilities** - XML документ, содержащий описание сервиса;
+* **GetMap** - запрос карты;
+
+Пример запросов **GetCapabilities**:
+
+    http://10.22.0.9/cgi-bin/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities
+    http://10.22.0.9/cgi-bin/vega/qgis_mapserv.fcgi?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities
+
+Примеры запросов **GetMap**:
+
+    http://10.22.0.9/cgi-bin/vega/qgis_mapserv.fcgi?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX=3372008.444843,8390920.210514,3374435.167875,8392249.223612&CRS=EPSG:3857&WIDTH=1238&HEIGHT=678&LAYERS=Здания&STYLES=&FORMAT=image/png&DPI=96&TRANSPARENT=TRUE
+
+    http://10.22.0.9/cgi-bin/vega/qgis_mapserv.fcgi?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX=3372008.444843,8390920.210514,3374435.167875,8392249.223612&CRS=EPSG:3857&WIDTH=256&HEIGHT=256&LAYERS=Здания&STYLES=&FORMAT=image/png&DPI=96&TRANSPARENT=TRUE
+
+    http://10.22.0.9/cgi-bin/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX=3368972.100758,8391486.707248,3373825.546823,8394140.813052&CRS=EPSG:3857&WIDTH=1238&HEIGHT=677&LAYERS=building,water&STYLES=,&FORMAT=image/png&DPI=96&TRANSPARENT=TRUE
+
+    http://10.22.0.9/cgi-bin/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX=59.6455,29.5057,60.24,30.7591&CRS=EPSG:4326&WIDTH=1238&HEIGHT=677&LAYERS=building,water&STYLES=,&FORMAT=image/png&DPI=96&TRANSPARENT=TRUE
+
+Посмотрите на результаты выполнения данных запросов в браузере.
+
+Как видно, клиент посылает серверу параметры охвата и размеры запрашиваемой
+картинки, WMS сервер извлекает данные из хранилища (или из другого
+сервиса (WMS или WFS), отрисовывает их о передаёт обратно клиенту).
+
+В качестве параметра клиент также может указать файл стилей в соответствии с которым
+должен быть отрисован слой.
+
+Помимо 2 обязательных запросов, стандарт определяет ещё ряд опциональных, среди
+которых стоит выделить запрос **GetFeatureInfo**, позволяющий запросить атрибутивную
+информацию об объекте с WMS-сервера (удобно использовать при клике
+мышью). Пример такого запроса:
+
+    http://10.22.0.9/cgi-bin/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&CRS=EPSG:3857&BBOX=3372008.444843,8390920.210514,3374435.167875,8392249.223612&WIDTH=256&HEIGHT=256&LAYERS=building&QUERY_LAYERS=building&X=51&Y=148&info_format=application/vnd.ogc.gml
+
+Схематично порядок работы с WMS-сервером можно представить в виде следующей
+диаграммы:
+
+![][02-wms-http-01]
+
+[02-wms-http-01]: ../img/02-wms-http-01.png
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

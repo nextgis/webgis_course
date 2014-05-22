@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<title>Установка PostGIS в Debian GNU/Linux 7.0</title>
+
+<xmp theme="united" style="display:none;">
+Установка PostGIS
+-----------------
+
+![][01-postgis-08]
+
+В Debian GNU/Linux 7.0 в репозиториях доступен PostGIS 1.5. Для установки
+выполняем следующую команду:
+
+    sudo aptitude install postgresql-9.1-postgis
+
+
+Добавление функций PostGIS в базу данных
+----------------------------------------
+
+Чтобы внутри базы данных были доступны функции PostGIS, их необходимо туда
+загрузить. Делаем это от имени пользователя `postgres` (у пользователя
+`pguser` на выполнение данных инструкций недостаточно прав):
+
+    sudo su - postgres -c "psql -d dbvega -f /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql"
+    sudo su - postgres -c "psql -d dbvega -f /usr/share/postgresql/9.1/contrib/postgis-1.5/spatial_ref_sys.sql"
+    sudo su - postgres -c "psql -d dbvega -c 'ALTER TABLE geometry_columns OWNER TO pguser'"
+    sudo su - postgres -c "psql -d dbvega -c 'ALTER TABLE spatial_ref_sys OWNER TO pguser'"
+    sudo su - postgres -c "psql -d dbvega -c 'ALTER TABLE geography_columns OWNER TO pguser'"
+
+Чтобы проверить, что PostGIS установился, выполним команду c локального хоста:
+
+    psql -d dbvega -U pguser -c "SELECT PostGIS_Full_Version();"
+
+или с удалённого:
+
+    psql -d dbvega -h 10.22.0.9 -U pguser -c "SELECT PostGIS_Full_Version();"
+
+В результате чего должен быть получен ответ вида:
+
+    -------------------------------------------------------------------------------------------------------
+    POSTGIS="1.5.3" GEOS="3.3.3-CAPI-1.7.4" PROJ="Rel. 4.7.1, 23 September 2009" LIBXML="2.7.8" USE_STATS
+    (1 строка)
+
+[01-postgis-08]: ../img/01-postgis-08.png
+
+</xmp>
+
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>
