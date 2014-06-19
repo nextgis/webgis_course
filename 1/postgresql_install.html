@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>Установка PostgreSQL 9.1 в Debian GNU/Linux 7.0</title>
+<title>Установка PostgreSQL в Debian GNU/Linux 8.0</title>
 
 <xmp theme="united" style="display:none;">
 Установка сервера баз данных
@@ -8,7 +8,7 @@
 
 ![][01-postgis-09]
 
-В Debian GNU/Linux 7.0 репозитории доступен [PostgreSQL 9.1](http://www.postgresql.org/), который
+В Debian GNU/Linux 8.0 в репозитории доступен [PostgreSQL 9.3.4](http://www.postgresql.org/), который
 может быть установлен с помощью менеджера управления пакетами.
 
 Установка сервера:
@@ -23,7 +23,7 @@
 
     sudo service postgresql start|stop|restart
 
-В результате установки также будет установлен консольный клиент [psql](http://www.postgresql.org/docs/9.1/static/app-psql.html).
+В результате установки также будет установлен консольный клиент [psql](http://www.postgresql.org/docs/9.3/static/app-psql.html).
 
 
 Управление пользователями на уровне хоста
@@ -31,7 +31,7 @@
 
 При установке PostgreSQL в системе и в БД создаётся
 пользователь с именем `postgres` (суперпользователь). Все настройки доступа
-к базе данных на уровне хоста располагаются в файле `/etc/postgresql/9.1/main/pg_hba.conf`.
+к базе данных на уровне хоста располагаются в файле `/etc/postgresql/9.3/main/pg_hba.conf`.
 Настройки для пользователя `postgres` по умолчанию имеют вид:
 
     local   all   postgres   peer
@@ -60,7 +60,7 @@
 
 Мы создали пользователя, который не обладает правами суперпользователя,
 не может создавать базы данных и другие роли
-(см. [документацию](http://www.postgresql.org/docs/9.1/static/sql-createrole.html)).
+(см. [документацию](http://www.postgresql.org/docs/9.3/static/sql-createrole.html)).
 
 От имени `postgres` создадим базу данных `dbvega` и сделаем пользователя `pguser`
 её владельцем:
@@ -96,11 +96,11 @@
 Для разрешения доступа к серверу с других хостов, необходимо выполнить 2
 настройки:
 
-1. В файле `/etc/postgresql/9.1/main/postgresql.conf` раскомментировать
+1. В файле `/etc/postgresql/9.3/main/postgresql.conf` раскомментировать
    строку `listen_addresses = 'localhost'` и заменить её на
    `listen_addresses = '*'`.
 
-2. В файл `/etc/postgresql/9.1/main/pg_hba.conf` добавить строку вида:
+2. В файл `/etc/postgresql/9.3/main/pg_hba.conf` добавить строку вида:
 
         host   all   all   10.22.0.0/24   md5
 
