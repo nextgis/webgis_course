@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<title>HTTP запросы к WFS-серверу</title>
+
+<xmp theme="united" style="display:none;">
+
+GET и POST запросы
+------------------
+
+Существует два способа получения данных с WFS-сервера: HTTP GET и HTTP POST.
+При GET-запросе данные запроса передаются с помощью строки URL вида:
+
+    http://wfsserver?key1=value1&ke2=value2
+
+Представленный запрос формируется путём добавления параметров запроса в виде
+*?ключ1=значение1&ключ2=значение2&...* к адресу WFS-сервера.
+Часть этих самых ключей и допустимых значений определены в стандарте WFS,
+а часть, так называемая vendor-specific, реализована в рамках того или иного
+WFS-сервера, но при этом отсутствует в стандарте. К преимуществам такого
+способа взаимодействия с WFS-сервером можно отнести такой момент:
+в этом случае пользователь может вставить строку запроса непосредственно в
+адресную строку браузера или поделиться ей с кем-нибудь, кому будут нужны те
+же самые данные (например, отфильтрованные по тому или иному признаку).
+
+POST-запросы - это более мощный инструмент, позволяющий передавать параметры
+запроса в формате XML в теле самого запроса. Любой GET-запрос к WFS-серверу
+можно описать в формате POST (обратное утверждение не верно).
+Значение заголовка Content-Type при таком запросе должен быть согласно
+стандарту установлен в значение *text/xml*.
+
+Отметим, что в теле POST запроса можно передавать не только XML документ, но
+и набор вида *ключ1=значение1&ключ2=значение2...*. Значение заголовка
+Content-Type при таком запросе должен быть согласно стандарту установлен в
+значение *application/x-www-form-urlencoded*.
+
+Доступные методы
+----------------
+
+Стандарт WFS описывает 6 методов, каждый из которых отвечает за выполнение
+той или иной операции:
+
+* **GetCapabilities**
+* **DescribeFeatureType**
+* **GetFeature**
+* **GetGMLObject**
+* **Transaction**
+* **LockFeature**
+
+Поскольку мы рассматриваем базовые возможности WFS,
+то остановимся на рассмотрении только двух методов: GetCapabilities и
+GetFeature. Первый отвечает за получение информации о Web-сервисе,
+второй - за непосредственное получение данных.
+
+Если вы работаете в браузере Firefox, то установите плагин RESTClient,
+если в Chrome (Chromium) - Simple REST Client.
+
+Запустите установленный плагин и выполните следующие запросы:
+
+1. Методом GET запрос **GetCapabilities**:
+
+       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&service=wfs&version=1.1.0&request=GetCapabilities
+   
+   В данном примере WFS-серверу было передано 3 параметра: *service=wfs*,
+   *version=1.1.0* и *request=GetCapabilities*. Это три обязательных
+   параметра, которые должны присутствовать в любом WFS-запросе
+   (*service*, *version*, *request*). Иногда WFS-сервер ослабляет это
+   требование, но официально - это три обязательных параметра,
+   поэтому следует всегда включать их в свои запросы.
+   Параметр *service* сообщает WFS-серверу, что выполняется WFS-запрос,
+   *version* - передаёт информацию о версии сервиса, *request* - запрашиваемый
+   метод.
+
+   Фрагмент ответа:
+
+       <FeatureTypeList>
+          <Operations>
+              <Operation>Query</Operation>
+          </Operations>
+          <FeatureType>
+            <Name>water</Name>
+            <Title>Водоёмы</Title>
+            <DefaultSRS>urn:ogc:def:crs:EPSG::4326</DefaultSRS>
+            <OtherSRS>urn:ogc:def:crs:EPSG::3857</OtherSRS>
+            <OutputFormats>
+              <Format>text/xml; subtype=gml/3.1.1</Format>
+            </OutputFormats>
+            <ows:WGS84BoundingBox dimensions="2">
+              <ows:LowerCorner>-180 -180</ows:LowerCorner>
+              <ows:UpperCorner>180 180</ows:UpperCorner>
+            </ows:WGS84BoundingBox>
+          </FeatureType>
+
+2. Методом POST запрос **GetCapabilities** по адресу:
+
+       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map
+   
+   Тело запроса:
+
+       <wfs:GetCapabilities
+           xmlns:wfs="http://www.opengis.net/wfs" service="WFS" version="1.1.0">
+       </wfs:GetCapabilities>
+
+   В результате вы должны получить точно такой же ответ, как и в первом
+   случае.
+
+3. Методом GET запрос **GetFeature**:
+
+       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&service=wfs&version=1.1.0&request=GetFeature&typeName=water&maxFeatures=10
+
+   Как мы видим из представленного примера - существует возможность
+   ограничения числа запрашиваемых объектов.
+
+4. Методом POST запрос **GetFeature** (фильтрация на основе значения атрибутивного поля):
+
+       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map
+
+   Тело запроса:
+
+       <wfs:GetFeature xmlns:wfs="http://www.opengis.net/wfs" service="WFS" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+       <wfs:Query typeName="feature:water">
+       <ogc:Filter xmlns:ogc="http://www.opengis.net/ogc">
+       <ogc:And>
+       <ogc:PropertyIsEqualTo>
+       <ogc:PropertyName>name</ogc:PropertyName>
+       <ogc:Literal>Нева</ogc:Literal>
+       </ogc:PropertyIsEqualTo>
+       <ogc:BBOX>
+       <ogc:PropertyName>wkb_geometry</ogc:PropertyName>
+       <gml:Box xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:4326">
+       <gml:coordinates decimal="." cs="," ts=" ">-180,-180 180,180</gml:coordinates>
+       </gml:Box>
+       </ogc:BBOX>
+       </ogc:And>
+       </ogc:Filter>
+       </wfs:Query>
+       </wfs:GetFeature>
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

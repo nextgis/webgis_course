@@ -1,0 +1,7 @@
+SYMBOLSET
+  SYMBOL
+    NAME  "station"
+    TYPE   pixmap
+    IMAGE "station.png"
+  END
+END

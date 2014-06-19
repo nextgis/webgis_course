@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<title>Создание WMS-сервиса на базе MapServer</title>
+
+<xmp theme="united" style="display:none;">
+
+Перепроецирование исходных данных
+---------------------------------
+
+Если планируется отображать WMS-слои поверх некоторых базовых слоёв, например
+слоёв OpenStreetMap или Google Maps, то WMS слои должны быть приведены к
+проекции этих базовых слоёв. Фактически это сводится к следующим операциям:
+
+1. Извлечение векторных данных из хранилища и их трансформация в проекцию
+   базового слоя;
+2. Собственно рендеринг данных.
+
+В случае если число объектов в слое велико, то трансформация данных может
+вызвать серьёзную нагрузку на процессор (ситуация может
+усугубиться при большом количества одновременных запросов), поэтому, чтобы
+избежать подобных расходов ресурсов системы лучше один раз перепроецировать
+данные. Выполним это. Для этого создадим в наших таблицах дополнительные
+поля и запишем в них трансформированные в проекцию `EPSG:3857` 
+(используемую большинством онлайн-сервисов) варианты оригинальных геометрий:
+
+    SELECT AddGeometryColumn('building_polygon', 'webmercator', 3857, 'MULTIPOLYGON', 2);
+    SELECT AddGeometryColumn('water_polygon', 'webmercator', 3857, 'POLYGON', 2);
+    SELECT AddGeometryColumn('highway_line', 'webmercator', 3857, 'MULTILINESTRING', 2);
+    SELECT AddGeometryColumn('railway_station_point', 'webmercator', 3857, 'POINT', 2);
+
+    UPDATE building_polygon SET webmercator = ST_Transform(wkb_geometry, 3857);
+    UPDATE water_polygon SET webmercator = ST_Transform(wkb_geometry, 3857);
+    UPDATE highway_line SET webmercator = ST_Transform(wkb_geometry, 3857);
+    UPDATE railway_station_point SET webmercator = ST_Transform(wkb_geometry, 3857);
+
+    CREATE INDEX building_polygon_webmercator_idx ON "building_polygon" USING GIST (webmercator);
+    CREATE INDEX highway_line_webmercator_idx ON "highway_line" USING GIST (webmercator);
+    CREATE INDEX water_polygon_webmercator_idx ON "water_polygon" USING GIST (webmercator);
+    CREATE INDEX railway_station_point_webmercator_idx ON "railway_station_point" USING GIST (webmercator);
+
+Чтобы проверить, что трансформирование осуществлено успешно, выполним
+следующий запрос:
+
+    SELECT ST_AsText(wkb_geometry) "original", ST_AsText(webmercator) "transformed" FROM building_polygon LIMIT 10;
+
+В результате выполнения данного запроса можно увидеть, что единицы измерения
+координат геометрий в поле `wkb_geometry` и `webmercator` отличаются (
+градусы и метры).
+
+Публикация данных по WMS
+------------------------
+
+Для публикации данных в виде WMS-сервиса создайте файл следующего содержания
+(заменив путь до map-файла на собственный):
+
+    MAP
+
+      NAME "Vega WMS Server"
+
+      SYMBOLSET         "symbols/symbols.sym"
+      FONTSET           "fonts/fonts.list"
+      EXTENT            3.27621e+06 8.31941e+06 3.42256e+06 8.45391e+06
+      OUTPUTFORMAT
+          NAME          "png"
+          EXTENSION     "png"
+          MIMETYPE      "image/png"
+          DRIVER         AGG/PNG
+          IMAGEMODE      RGBA
+          FORMATOPTION  "INTERLACE=OFF"
+      END
+
+      PROJECTION
+          "init=epsg:3857"
+      END
+
+      WEB
+        METADATA
+          "wms_title"          "WMS Demo Server for MapServer"
+          "wms_onlineresource" "http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wms/wms.map&"
+          "wms_srs"            "EPSG:4326 EPSG:3857"
+          "wms_abstract"       "Saint Petersburg demo WMS"
+          "wms_enable_request" "*"
+          "wms_encoding"       "utf-8"
+         END
+      END
+
+      LAYER
+        NAME "water"
+        METADATA
+          "wms_title"         "Водоёмы"
+          "gml_include_items" "all"
+          "wms_enable_request" "*"
+          "wms_extent"         "3284564.58679982 8321239.84288729 3423908.74805983 8453366.89818672"
+        END
+        TEMPLATE dummy.html
+        TYPE POLYGON
+        CONNECTIONTYPE postgis
+        CONNECTION    "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA          "webmercator from water_polygon"
+        LABELITEM     "name"
+        CLASS
+            STYLE
+                COLOR 181 210 214
+            END
+            LABEL
+                FONT          "tahoma"
+                TYPE           truetype
+                SIZE           5
+                COLOR          31 99 176
+                POSITION       lc
+                BUFFER         1
+                PARTIALS       false
+                ANGLE          auto
+                ENCODING       utf-8
+                OUTLINECOLOR   255 255 2500
+                ANTIALIAS      true
+                MINFEATURESIZE auto
+            END
+        END
+      END
+
+      LAYER
+        NAME "building"
+        METADATA
+          "wms_title"          "Здания"
+          "gml_include_items"  "all"
+          "wms_enable_request" "*"
+          "wms_extent"         "3277518.64189396 8321348.77352887 3420433.60980062 8453918.88750861"
+        END
+        TEMPLATE dummy.html
+        TYPE POLYGON
+        CONNECTIONTYPE  postgis
+        CONNECTION     "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA           "webmercator from building_polygon"
+        CLASS
+            STYLE
+                COLOR        206 154 156
+                OUTLINECOLOR 106 106 106
+            END
+        END
+      END
+
+
+      LAYER
+        NAME "highway"
+        METADATA
+          "wms_title"          "Дороги"
+          "gml_include_items"  "all"
+          "wms_enable_request" "*"
+          "wms_extent"         "3276208.16388569 8319410.71847594 3422561.49450513 8453914.64594435"
+        END
+        TEMPLATE dummy.html
+        TYPE LINE
+        CONNECTIONTYPE       postgis
+        CONNECTION          "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA                "webmercator from highway_line"
+        CLASS
+            STYLE
+                COLOR        255 255 255
+                WIDTH        3
+                OUTLINECOLOR 100 100 100
+                OUTLINEWIDTH 0.2
+            END
+        END
+      END
+
+      LAYER
+        NAME "railway_station"
+        METADATA
+          "wms_title"          "Железнодорожные станции"
+          "gml_include_items"  "all"
+          "wms_enable_request" "*"
+          "wms_extent"         "3284920.3193646 8328134.62707164 3419784.09396769 8448902.44944274"
+        END
+        TEMPLATE dummy.html
+        TYPE POINT
+        CONNECTIONTYPE       postgis
+        CONNECTION          "user=pguser password=topsecret dbname=dbvega host=localhost"
+        DATA                "webmercator from railway_station_point"
+        CLASS
+            STYLE
+                SYMBOL "station"
+                SIZE   10
+            END
+        END
+      END
+
+    END
+
+По указанному в map-файле пути `SYMBOLSET` создайте файл [symbols.sym](../symbols/symbols.sym) и в
+этот же каталог поместите файл [station.png](../symbols/station.png). Содержимое файла *symbols.sym*:
+
+    SYMBOLSET
+      SYMBOL
+        NAME  "station"
+        TYPE   pixmap
+        IMAGE "station.png"
+      END
+    END
+
+По указаному в map-файле пути `FONTSET` расположите файл [fonts.list](../fonts/fonts.list) и в этот
+же каталог поместите файл [tahoma.ttf](../fonts/tahoma.ttf). Содержимое файла *fonts.list*:
+
+    tahoma  tahoma.ttf
+
+* **wms_title** - обязательный параметр, человекочитаемы идентификатор сервера/слоя;
+* **wms_onlineresource** - опциональный параметр, адрес WMS-сервиса (если не указан, то
+  вычисляется автоматически на основании имени хоста и пути до map-файла);
+* **wms_srs** - список проекций в которых сервер может отдавать данные;
+* **wms_abstract** - краткое описание сервера;
+* **wms_enable_request** -список поддерживаемых запросов (GetCapabilities, GetMap, GetFeatureInfo и GetLegendGraphic):
+      "wms_enable_request" "GetMap GetFeatureInfo"
+      "wms_enable_request" "* !GetFeatureInfo"
+* **wms_encoding** - кодировка XML-документа, возвращаемого сервером (GetCapabilities);
+* **gml_include_items** - список возвращаемых атрибутов (GetFeatureInfo);
+* **wms_extent** - охват слоя (GetCapabilities);
+
+</xmp>
+
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

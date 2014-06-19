@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<title>Добавление слоя WFS</title>
+
+<xmp theme="united" style="display:none;">
+
+
+Пример подключения WFS-слоя:
+
+    <html>
+        <head>
+            <title>My Map</title>
+            <script src="http://openlayers.org/dev/OpenLayers.js"></script>
+            <script>
+                function init() {
+                    var options = {
+                        div: "mapid",
+                        projection: "EPSG:3857"
+                    };
+
+                    var map = new OpenLayers.Map(options);
+                    var osm = new OpenLayers.Layer.OSM()
+                    railway_station = new OpenLayers.Layer.Vector("Buildings", {
+                        strategies: [
+                            new OpenLayers.Strategy.BBOX()
+                        ],
+                        protocol: new OpenLayers.Protocol.WFS({
+                            version: "1.0.0",
+                            url: "http://10.22.0.9/cgi-bin/wfs",
+                            featureType: "railway_station",
+                            geometryName: "wkb_geometry"
+                        }),
+                        projection: 'EPSG:4326'
+                    });
+                    var extent = [3322236.017526,8366084.2704585,3418852.421265,8395053.9041745];
+                    map.addLayers([osm, railway_station]);
+                    map.zoomToExtent(extent);
+
+                    var ls = new OpenLayers.Control.LayerSwitcher()
+                    map.addControl(ls);
+                }
+            </script>
+        </head>
+        <body>
+            <body onload="init()">
+            <div id="mapid" style="width:100%; height:100%"></div>
+        </body>
+    </html>
+
+Для запроса данных по WFS необходимо, чтобы приложение и WFS-сервис функционировали
+в рамках одного домена, поэтому разместите файл с картой
+на Web-сервере и сделайте на него симлинк в `/var/www/`.
+
+После того как WFS-слой загрузится, можно убедиться в том, что объекты
+слоя содержат в себе в том числе и атрибутику. Установите [Firebug](http://firebug.ru/)
+и откройте его консоль, после чего введите команду:
+
+    railway_station.features[1].attributes
+
+В результате вы должны получить значение все атрибутов объекта под индексом 1:
+
+    name: "Кронштадтская колония"
+    ogc_fid: "4"
+    osm_id: "246116842"
+    railway: "halt"
+    webmercator: "0101000020110F0000F2ED319B3A3949418F33DF86A2FA5F41"
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

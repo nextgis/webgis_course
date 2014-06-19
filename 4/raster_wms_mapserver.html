@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<title>Публикация растровых данных с помощью MapServer</title>
+
+<xmp theme="united" style="display:none;">
+
+Откройте map-файл, в котором вы описывали слои WMS-сервиса на базе
+MapServer и добавьте в него форагмент, отвечающий за публикацию
+нашего растра по WMS:
+
+    LAYER
+      NAME "sattelite_image"
+      METADATA
+        "wms_title"          "Спутниковый снимок"
+        "wms_enable_request" "*"
+        "wms_extent"         "3284920.3193646 8328134.62707164 3419784.09396769 8448902.44944274"
+      END
+      TYPE RASTER
+      DATA                "spb_merc_8bit.tif"
+    END
+
+Скопируйте на локальную машину растр `spb_merc_8bit.tif` и откройте его в
+QGIS. Затем подключитесь к WMS, опубликованному на базе MapServer, и добавьте
+только что опубликованный слой:
+
+![][04-raster-01]
+
+Если слой, опубликованный по WMS, более тёмный, чем оригинальный растр -
+это означает, что в QGIS включено растяжение гистограммы, то же самое можно
+сделать и в MapServer. Для этого на уровне объекта LAYER задайте директиву
+[SCALE](http://mapserver.org/input/raster.html#special-processing-directives):
+
+    PROCESSING "SCALE_1=0,75"
+
+В зависимости от значений SCALE внешний вид растра будет изменяться.
+
+![][04-raster-02]
+
+После того, как слой опубликован по WMS, его можно подключить в MapProxy.
+Выполните это самостоятельно.
+
+    sources:
+      vega_sattelite:
+        type: wms
+        req:
+          url: http://localhost/cgi-bin/wms
+          layers: sattelite_image
+          transparent: true
+        coverage:
+          bbox: [29.5089,59.6768,30.7204,60.2201]
+          bbox_srs: 'EPSG:4326'
+
+В результате кэширования слоя и публикации кэша по TMS, по следующей ссылке:
+
+    http://10.22.0.9:8080/tms/1.0.0/test_wms_cache_EPSG3857/14/19146/23240.png
+
+должен открыться тайл:
+
+![][04-raster-03]
+
+[04-raster-01]: ../img/04-raster-01.png
+[04-raster-02]: ../img/04-raster-02.png
+[04-raster-03]: ../img/04-raster-03.png
+
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<title>SLD (Styled Layer Descriptor)</title>
+
+<xmp theme="united" style="display:none;">
+
+[SLD (Styled Layer Descriptor)](http://www.opengeospatial.org/standards/sld) -
+основанный на базе XML стандарт OGC,
+предназначенный для описания символики пространственных данных.
+Любой SLD-файл представляет собой документ, имеющий следующую структуру:
+
+    Header
+      FeatureTypeStyle
+        Rule
+          Symbolizer
+
+**Header** - заголовок, содержащий метаинформацию и пространства имён XML,
+эта часть в большинстве случаев одинакова для всех SLD-документов.
+
+**FeatureTypeStyle** - секция, содержащая набор правил (Rules). Группировка
+правил в FeatureTypeStyle выполняется с тем расчётом, что рендеринг данных
+осуществляется в порядке их следования, проще говоря слой сначала рендерится
+в соответствии с первым FeatureTypeStyle, затем в соответствии со вторым и
+так далее. На выходе полученные результаты накладываются друг на друга.
+
+**Rule** - правило применения стиля. Оно может быть задано как глобально, так
+и иметь логику некоторого фильтра. Например, используя правила, можно
+настроить символику в соответствии с атрибутивными полями слоя или текущим
+масштабным уровнем.
+
+**Symbolizer** - секция в которой непосредственно задаётся сама символика.
+Symbolizer может принимать одно из пяти значений, назначение которых можно
+понять из их названия:
+
+* **PointSymbolizer**
+* **LineSymbolizer**
+* **PolygonSymbolizer**
+* **RasterSymbolizer**
+* **TextSymbolizer**
+
+В одном документе SLD может быть несколько секций **FeatureTypeStyles**,
+несколько секций **Rule** на каждую секцию **FeatureTypeStyles** и несколько
+**Symbolizer** на каждую секцию **Rule**. Пример SLD-документа:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <StyledLayerDescriptor version="1.1.0"
+      xmlns="http://www.opengis.net/sld"
+      xmlns:se="http://www.opengis.net/se"
+      xmlns:ogc="http://www.opengis.net/ogc"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.opengis.net/sld
+      http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd">
+      <NamedLayer>
+      <Name>building</Name>
+        <UserStyle>
+          <Name>xxx</Name>
+          <FeatureTypeStyle>
+            <Rule>
+              <PolygonSymbolizer>
+                <Fill>
+                  <CssParameter name="fill">#000080</CssParameter>
+                </Fill>
+                <Stroke>
+                  <CssParameter name="stroke">#FFFFFF</CssParameter>
+                  <CssParameter name="stroke-width">2</CssParameter>
+                </Stroke>
+              </PolygonSymbolizer>
+            </Rule>
+          </FeatureTypeStyle>
+        </UserStyle>
+      </NamedLayer>
+      <NamedLayer>
+      <Name>highway</Name>
+        <UserStyle>
+          <Name>xxx</Name>
+          <FeatureTypeStyle>
+            <Rule>
+              <LineSymbolizer>
+                <Stroke>
+                  <CssParameter name="stroke">#333333</CssParameter>
+                  <CssParameter name="stroke-width">5</CssParameter>
+                  <CssParameter name="stroke-linecap">round</CssParameter>
+                </Stroke>
+              </LineSymbolizer>
+            </Rule>
+          </FeatureTypeStyle>
+        </UserStyle>
+      </NamedLayer>
+      <NamedLayer>
+      <Name>highway</Name>
+        <UserStyle>
+          <Name>xxx</Name>
+          <FeatureTypeStyle>
+            <Rule>
+              <LineSymbolizer>
+                <Stroke>
+                  <CssParameter name="stroke">#6699FF</CssParameter>
+                  <CssParameter name="stroke-width">3</CssParameter>
+                  <CssParameter name="stroke-linecap">round</CssParameter>
+                </Stroke>
+              </LineSymbolizer>
+            </Rule>
+          </FeatureTypeStyle>
+        </UserStyle>
+      </NamedLayer>
+    </StyledLayerDescriptor>
+
+MapServer поддерживает символику SLD, но с некоторыми оговорками. На настоящий
+момент времени (MapServer 6.2.0) не поддерживаются
+несколько секций **FeatureTypeStyle** для одного слоя, а также несколько
+секций **Rule** внутри **FeatureTypeStyle**. В этом случае для
+того, чтобы описать составной символ (например, дорога с обводкой),
+нужно создать столько разделов **NamedLayer** с одинаковым именем слоя,
+сколько уровней символики предполагает символ. В нашем примере SLD-файл
+содержит 2 секции **NamedLayer** для слоя `highway` - согласно первой
+слой отрисовывается линией серого цвета толщиной 5 пикселов, а
+согласно второй - голубой линией толщиной 3 пиксела.
+
+Подготовленный документ SLD сохраняется в файл, доступный для сервера WMS по
+протоколу HTTP. В строке запроса указывается полная ссылка в параметре `SLD`:
+
+    http://wms-server/wms?SERVICE=WMS&LAYERS=mylayer&SLD=http://other-server/layer_with_filter.sld
+
+Заметьте, что имя слоя в параметре `LAYERS` и в документе SLD должно совпадать
+(в примере и там и там `mylayer`).
+
+Создадайте файл *example.sld* с приведенным выше содержимым и сделайте
+на него символьную ссылку в каталог `/var/www/html` (каталог, указанный в настройке `DocumentRoot` хоста):
+
+    ln -s /home/rykov/nextgis/vega2013/example.sld  /var/www/html
+
+Откройте его в браузере, для того, чтобы убедиться в том, что он
+доступен на чтение Web-серверу:
+
+    http://10.22.0.9/example.sld
+
+Теперь выполните следующий запрос (без указания параметра `SLD`):
+
+    http://10.22.0.9/cgi-bin/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX=3368972.100758,8391486.707248,3373825.546823,8394140.813052&CRS=EPSG:3857&WIDTH=640&HEIGHT=400&LAYERS=building,highway&STYLES=,&FORMAT=image/png&TRANSPARENT=TRUE
+
+![][02-wms-sld-01]
+
+И с указанием `SLD`:
+
+    http://10.22.0.9/cgi-bin/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX=3368972.100758,8391486.707248,3373825.546823,8394140.813052&CRS=EPSG:3857&WIDTH=640&HEIGHT=400&LAYERS=building,highway&STYLES=,&FORMAT=image/png&TRANSPARENT=TRUE&SLD=http://localhost/example.sld
+
+![][02-wms-sld-02]
+
+В Debian GNU/Linux 7.0 MapServer не самый свежий, поэтому созданный нами
+SLD документ будет обработан не корректно, в результате чего мы получим
+следующую картину:
+
+![][02-wms-sld-03]
+
+Предыдущий результат был получен в MapServer 6.2.0.
+
+
+[02-wms-sld-01]: ../img/02-wms-sld-01.png
+[02-wms-sld-02]: ../img/02-wms-sld-02.png
+[02-wms-sld-03]: ../img/02-wms-sld-03.png
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

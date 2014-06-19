@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<title>TMS (Tile Map Service)</title>
+
+<xmp theme="united" style="display:none;">
+
+Протокол TMS определяет интерфейс Web-сервиса, который возвращает тайлы
+в соответствии с запросом. TMS - очень простой протокол и ориентирован
+на доставку тайлов, а не полноценных карт как WMS.
+
+TMS сервер отвечает за создание сервиса **Tile Map Service**, идентифицируемого
+с помощью URL, например:
+
+    http://10.22.0.9:8080/tms/1.0.0
+
+В данном случае `1.0.0` - версия сервиса. Такой сервис обеспечивает доступ
+к одному или более слою **Tile Map**. То есть, если набрать вышеуказанный
+адрес в браузере, то в ответ должен прийти *.xml документ, содержащий
+описание доступных на сервере (в рамках TMS-сервиса) слоёв:
+
+    <TileMapService version="1.0.0">
+    <Title>MapProxy WMS Proxy</Title>
+    <Abstract>This is fantastic MapProxy</Abstract>
+    <TileMaps>
+    <TileMap title="Cached Test Layer" srs="OSGEO:41001" profile="global-mercator" href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG3857"/>
+    <TileMap title="Cached Test Layer" srs="EPSG:4326" profile="global-geodetic" href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326"/>
+    </TileMaps>
+    </TileMapService>
+
+Каждый такой слой представлен совокупностью тайловых сеток различного
+разрешения **Tile Set**:
+
+![][03-caching-03]
+
+Если запросить у сервера информацию по конкретному слою, то в ответ можно
+получить список всех **Tile Set** этого слоя:
+
+    http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326
+
+    <TileMap version="1.0.0">
+    <Title>Cached Test Layer</Title>
+    <Abstract/>
+    <SRS>EPSG:4326</SRS>
+    <BoundingBox minx="-180.0" miny="-90.0" maxx="180.0" maxy="90.0"/>
+    <Origin x="-180.0" y="-90.0"/>
+    <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>
+    <TileSets profile="global-geodetic">
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/0" units-per-pixel="0.703125" order="0"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/1" units-per-pixel="0.3515625" order="1"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/2" units-per-pixel="0.17578125" order="2"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/3" units-per-pixel="0.087890625" order="3"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/4" units-per-pixel="0.0439453125" order="4"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/5" units-per-pixel="0.02197265625" order="5"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/6" units-per-pixel="0.010986328125" order="6"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/7" units-per-pixel="0.0054931640625" order="7"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/8" units-per-pixel="0.00274658203125" order="8"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/9" units-per-pixel="0.00137329101562" order="9"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/10" units-per-pixel="0.000686645507812" order="10"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/11" units-per-pixel="0.000343322753906" order="11"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/12" units-per-pixel="0.000171661376953" order="12"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/13" units-per-pixel="8.58306884766e-05" order="13"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/14" units-per-pixel="4.29153442383e-05" order="14"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/15" units-per-pixel="2.14576721191e-05" order="15"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/16" units-per-pixel="1.07288360596e-05" order="16"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/17" units-per-pixel="5.36441802979e-06" order="17"/>
+    <TileSet href="http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/18" units-per-pixel="2.68220901489e-06" order="18"/>
+    </TileSets>
+    </TileMap>
+
+Заметьте, что каждый **Tile Set** имеет свой собственный уникальный URL. Этот
+URL используется для извлечения тайлов внутри конктретного **Tile Set**.
+Тайл внутри тайловой сетки адресуется координатами `x` и `y`. Например, тайловая
+сетка для сета третьего уровня (order="2") будет выглядеть следующим образом:
+
+![][03-caching-04]
+
+Проверка:
+
+    >>> 0.17578125*256*8
+    360.0
+    >>> 0.17578125*256*4
+    180.0
+
+Пример адресации тайла на `2` масштабном уровне с координатами `(7,3)`:
+
+    http://10.22.0.9:8080/tms/1.0.0/test_wms_cache/EPSG4326/2/7/3.png
+
+[03-caching-03]: ../img/03-caching-03.png
+[03-caching-04]: ../img/03-caching-04.png
+
+
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<title>Загрузка данных в PostGIS</title>
+
+<xmp theme="united" style="display:none;">
+
+Существует множество различных способов загрузки данных в БД PostGIS.
+Это можно сделать из настольного приложения (например, QGIS), можно
+воспользоваться штатной PostGIS-утилитой shp2pgsql (для загрузки *.shp файлов).
+Вариант загрузки данных с помощью shp2pgsql описан в статье
+[Основы работы с PostGIS](http://gis-lab.info/qa/postgis-work.html).
+
+Мы же воспользуемся более универсальным инструментом -
+[ogr2ogr](http://www.gdal.org/ogr2ogr.html).
+ogr2ogr - это утилита, предназначнная для конвертации векторных данных между
+различными форматами. Список поддерживаемых форматов доступен [здесь](http://www.gdal.org/ogr/ogr_formats.html).
+Примеры использования утилиты ogr2ogr можно найти в [статье](http://gis-lab.info/qa/ogr2ogr-examples.html).
+
+Загрузку данных лучше осуществлять с того же хоста, на котором
+расположена база данных, так как объем загружаемых данных
+может быть достаточно велик и выполнение данной операции с удалённого
+хоста может занять продолжительное время.
+
+Установим ogr2ogr на наш сервер:
+
+    sudo aptitude install gdal-bin
+
+Загрузим в нашу базу 4 слоя на территорию г. Санкт-Петербург, построенных на основе данных
+[OpenStreetMap](http://openstreetmap.org/). Данные OpenStreetMap,
+в формате *.shp, которые мы будем загружать в PostGIS
+можно получить на странице следующего [проекта](http://gis-lab.info/projects/osm_shp.html).
+
+* **Водоёмы**, 1741 объект
+* **Здания**, 98058 объектов
+* **Дорожная сеть**, 85363 объекта
+* **Железнодорожные станции**, 797 объект
+
+
+Скачиваем и распаковываем данные:
+
+    mkdir ~/tmpdata
+    cd tmpdata
+    wget http://data.gis-lab.info/osm_shp/latest/RU-SPE.7z
+    7z x RU-SPE.7z -o*
+    cd RU-SPE
+    rm *.cpg
+
+Загружаем данные:
+
+    ogr2ogr -lco "OVERWRITE=YES" -nlt POLYGON -f PostgreSQL PG:"host=localhost user=pguser password=topsecret dbname=dbvega" water-polygon.shp
+    ogr2ogr -lco "OVERWRITE=YES" -nlt MULTIPOLYGON -f PostgreSQL PG:"host=localhost user=pguser password=topsecret dbname=dbvega" building-polygon.shp
+    ogr2ogr -lco "OVERWRITE=YES" -nlt MULTILINESTRING -f PostgreSQL PG:"host=localhost user=pguser password=topsecret dbname=dbvega" highway-line.shp
+    ogr2ogr -lco "OVERWRITE=YES" -nlt POINT -f PostgreSQL PG:"host=localhost user=pguser password=topsecret dbname=dbvega" railway-station-point.shp
+
+Открываем pgAdmin, перходим в базу данных `dbvega` и видим, что появилось
+4 новых таблицы: помимо служебных
+`geometry_columns` и `spatial_ref_sys` - это соответственно
+`water_polygon`, `building_polygon`, `highway_line` и `railway_station_point`.
+
+Открываем окно редактора SQL и выполняем команду:
+
+    SELECT ST_AsGeoJSON(wkb_geometry) from building_polygon LIMIT 10;
+
+В результате которой будет получено GeoJSON представление 10 произвольных
+геометрий (название поля, содержащего геометрию можно задавать
+при загрузке данных, по умолчанию - `wkb_geometry`).
+
+</xmp>
+<script src="../strapdown/v/0.1/strapdown.js"></script>
+</html>
