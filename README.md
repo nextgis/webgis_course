@@ -13,3 +13,6 @@ http://nextgis.github.io/webgis_course/
 
 Вы можете пройти этот курс под руководством его создателей:
 http://nextgis.ru/services/training/
+
+
+Лицензия на материалы курса: CC-BY-SA
