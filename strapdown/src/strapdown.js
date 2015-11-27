@@ -1,8 +1,5 @@
 ;(function(window, document) {
 
-  // Hide body until we're done fiddling with the DOM
-  document.body.style.display = 'none';
-
   //////////////////////////////////////////////////////////////////////
   //
   // Shims for IE < 9
@@ -20,7 +17,7 @@
             if(re.test(els[i].className))a.push(els[i]);
         return a;
       }
-      return getElementsByClassName(document.body, name); 
+      return getElementsByClassName(document.body, name);
     }
   }
 
@@ -33,6 +30,14 @@
       titleEl = document.getElementsByTagName('title')[0],
       scriptEls = document.getElementsByTagName('script'),
       navbarEl = document.getElementsByClassName('navbar')[0];
+
+  if (!markdownEl) {
+    console.warn('No embedded Markdown found in this document for Strapdown.js to work on! Visit http://strapdownjs.com/ to learn more.');
+    return;
+  }
+
+  // Hide body until we're done fiddling with the DOM
+  document.body.style.display = 'none';
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -118,6 +123,13 @@
     codeEl.className = 'prettyprint lang-' + lang;
   }
   prettyPrint();
+
+  // Style tables
+  var tableEls = document.getElementsByTagName('table');
+  for (var i=0, ii=tableEls.length; i<ii; i++) {
+    var tableEl = tableEls[i];
+    tableEl.className = 'table table-striped table-bordered';
+  }
 
   // All done - show body
   document.body.style.display = '';
