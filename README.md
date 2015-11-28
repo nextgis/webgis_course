@@ -15,4 +15,4 @@ http://nextgis.github.io/webgis_course/
 http://nextgis.ru/services/training/
 
 
-Лицензия на материалы курса: CC-BY-SA
+Лицензия на материалы курса: CC BY-ND
