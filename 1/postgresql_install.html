@@ -105,11 +105,11 @@
 Для разрешения доступа к серверу с других хостов, необходимо выполнить 2
 настройки:
 
-1. В файле `/etc/postgresql/9.3/main/postgresql.conf` раскомментировать
+1. В файле `/etc/postgresql/9.4/main/postgresql.conf` раскомментировать
    строку `listen_addresses = 'localhost'` и заменить её на
    `listen_addresses = '*'`.
 
-2. В файл `/etc/postgresql/9.3/main/pg_hba.conf` добавить строку вида:
+2. В файл `/etc/postgresql/9.4/main/pg_hba.conf` добавить строку вида:
 
         host   all   all   10.22.0.0/24   md5
 
