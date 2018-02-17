@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Установка MapServer в Debian GNU/Linux 7.0</title>
+<title>Установка MapServer в Ubuntu 16.04</title>
 
 <topbar style="display:none;">
     <item><a href="../index.html">Домой</a></item>
@@ -15,39 +15,33 @@
 
 ![][02-mapserver-01]
 
-Установка веб-сервера Apache
-----------------------------
+Установка веб-сервера nginx
+---------------------------
 
-Для установки веб-сервера Apache выполняем следующую команду (на том же хосте,
+Для установки веб-сервера nginx выполняем следующую команду (на том же хосте,
 где запущен PostgreSQL):
 
-    sudo aptitude install apache2
+    sudo apt install nginx
 
-Чтобы убедиться в том, что Apache установился корректно, перейдите в браузере
+Чтобы убедиться в том, что nginx установился корректно, перейдите в браузере
 по адресу `http://IP-адрес веб-сервера`. Дожна отобразиться страница, содержащая
 следующий текст:
 
-    It works!
-    This is the default web page for this server.
-    The web server software is running but no content has been added, yet
+    Welcome to nginx!
+    If you see this page, the nginx web server is successfully installed and working. Further configuration is required.
+
+nginx поддерживает FastCGI и не поддерживает CGI, поэтому будем
+использовать fcgiwrap:
+
+    sudo apt install fcgiwrap
 
 Установка MapServer
 -------------------
 
 Для установки MapServer выполним следующую команду:
 
-    sudo aptitude install cgi-mapserver mapserver-bin
+    sudo apt install cgi-mapserver
 
-Чтобы убедиться в том, что MapServer установился корректно, перейдите в браузере
-по адресу `http://IP-адрес веб-сервера/cgi-bin/mapserv`. Должна отобразиться
-страница, содержащая следующий текст:
-
-    No query information to decode. QUERY_STRING is set, but empty.
-
-Если страница с таким содержимым не появилась, попробуйте включить модуль *cgid*:
-
-    sudo a2enmod cgid
-    sudo service apache2 restart
 
 [02-mapserver-01]: ../img/02-mapserver-01.png
 
