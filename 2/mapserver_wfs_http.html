@@ -67,7 +67,7 @@ GetFeature. Первый отвечает за получение информа
 
 1. Методом GET запрос **GetCapabilities**:
 
-       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&service=wfs&version=1.1.0&request=GetCapabilities
+       http://10.22.0.9/wfs?&service=wfs&version=1.1.0&request=GetCapabilities
    
    В данном примере WFS-серверу было передано 3 параметра: *service=wfs*,
    *version=1.1.0* и *request=GetCapabilities*. Это три обязательных
@@ -101,7 +101,7 @@ GetFeature. Первый отвечает за получение информа
 
 2. Методом POST запрос **GetCapabilities** по адресу:
 
-       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map
+       http://10.22.0.9/wfs
    
    Тело запроса:
 
@@ -114,14 +114,14 @@ GetFeature. Первый отвечает за получение информа
 
 3. Методом GET запрос **GetFeature**:
 
-       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&service=wfs&version=1.1.0&request=GetFeature&typeName=water&maxFeatures=10
+       http://10.22.0.9/wfs?service=wfs&version=1.1.0&request=GetFeature&typeName=water&maxFeatures=10
 
    Как мы видим из представленного примера - существует возможность
    ограничения числа запрашиваемых объектов.
 
 4. Методом POST запрос **GetFeature** (фильтрация на основе значения атрибутивного поля):
 
-       http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map
+       http://10.22.0.9/wfs
 
    Тело запроса:
 
