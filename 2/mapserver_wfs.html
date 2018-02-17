@@ -33,8 +33,8 @@ WFS-сервер [TinyOWS](http://mapserver.org/tinyows/index.html), позво�
 публиковать данные PostGIS в виде WFS-T-сервисов. Небольшое руководство
 по работе с TinyOWS можно найти [здесь](http://gis-lab.info/docs/gisconf/rykov/workshop_wfs.html).
 
-Для публикации данных в виде WFS-сервиса создайте файл следующего содержания
-(заменив путь до map-файла на собственный):
+Для публикации данных в виде WFS-сервиса создайте в домашней директории
+файл следующего содержания:
 
     MAP
 
@@ -43,7 +43,7 @@ WFS-сервер [TinyOWS](http://mapserver.org/tinyows/index.html), позво�
       WEB
         METADATA
           "wfs_title"          "WFS Demo Server for MapServer"
-          "wfs_onlineresource" "http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&"
+          "wfs_onlineresource" "http://10.22.0.9/wfs"
           "wfs_srs"            "EPSG:4326 EPSG:3857"
           "wfs_abstract"       "Saint Petersburg demo WFS"
           "wfs_enable_request" "*"

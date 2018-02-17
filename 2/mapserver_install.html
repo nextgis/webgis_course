@@ -89,7 +89,7 @@ nginx поддерживает FastCGI и не поддерживает CGI, п�
         location /qgis {
             fastcgi_pass                     unix:/var/run/fcgiwrap.socket;
             fastcgi_param SCRIPT_FILENAME    /usr/lib/cgi-bin/qgis_mapserv.fcgi;
-            fastcgi_param QGIS_PROJECT_FILE  /home/rykovd/RU-KHM/qgis-mapnik.qgs;
+            fastcgi_param QGIS_PROJECT_FILE  /home/rykovd/RU-SPE/qgis-mapnik.qgs;
             fastcgi_param REQUEST_METHOD     $request_method;
             fastcgi_param QUERY_STRING       $query_string;
         }
