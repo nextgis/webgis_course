@@ -27,15 +27,22 @@
       ('PolygonWithHole', 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0),(1 1, 1 2, 2 2, 2 1, 1 1))'),
       ('Collection', 'GEOMETRYCOLLECTION(POINT(2 0),POLYGON((0 0, 1 0, 1 1, 0 1, 0 0)))');
     
-    SELECT Populate_Geometry_Columns();
     SELECT name, ST_AsText(geom) FROM geometries;
 
-![][01-postgis-05]
+Результат выполнения запроса:
+
+          name       |                           st_astext                           
+    -----------------+---------------------------------------------------------------
+     Point           | POINT(0 0)
+     Linestring      | LINESTRING(0 0,1 1,2 1,2 2)
+     Polygon         | POLYGON((0 0,1 0,1 1,0 1,0 0))
+     PolygonWithHole | POLYGON((0 0,10 0,10 10,0 10,0 0),(1 1,1 2,2 2,2 1,1 1))
+     Collection      | GEOMETRYCOLLECTION(POINT(2 0),POLYGON((0 0,1 0,1 1,0 1,0 0)))
+    (5 rows)
 
 В данном примере создаётся новая таблица `geometries` и затем в неё записываются
-5 записей, состоящих из текстового поля и поля геометрии. Затем данная таблица
-регистрируется в таблице `geometry_columns`, после чего записи запрашиваются
-в человекочитаемом формате.
+5 записей, состоящих из текстового поля и поля геометрии, после чего
+записи запрашиваются в человекочитаемом формате.
 
 Таблицы метаданных
 ------------------
@@ -49,16 +56,24 @@
 
 ![][01-postgis-06]
 
-В нашем примере функция **Populate_Geometry_Columns** сканирует базу данных
-и записывает в таблицу **geometry_columns** всю информацию о таблицах с
-геометриями (количество записей равно общему количеству полей геометрий
-в базе (одна таблица может содержать несколько таких полей)).
+Количество записей представления **geometry_columns** равно общему
+количеству полей геометрий в базе (одна таблица может содержать
+несколько таких полей).
 
 Выполните следующий запрос:
 
     SELECT * FROM geometry_columns;
 
-![][01-postgis-07]
+Результат:
+
+     f_table_catalog | f_table_schema |     f_table_name      | f_geometry_column | coord_dimension | srid |      type       
+    -----------------+----------------+-----------------------+-------------------+-----------------+------+-----------------
+     dbvega          | public         | water_polygon         | wkb_geometry      |               2 | 4326 | POLYGON
+     dbvega          | public         | building_polygon      | wkb_geometry      |               2 | 4326 | MULTIPOLYGON
+     dbvega          | public         | highway_line          | wkb_geometry      |               2 | 4326 | MULTILINESTRING
+     dbvega          | public         | railway_station_point | wkb_geometry      |               2 | 4326 | POINT
+     dbvega          | public         | geometries            | geom              |               2 |    0 | GEOMETRY
+    (5 rows)
 
 Путём запроса к данной таблице ГИС-клиенты или библиотеки могут
 определить характер содержимого базы данных без анализа каждой таблицы
