@@ -30,7 +30,7 @@
       mapserver_wms:
         type: wms
         req:
-          url: http://localhost/cgi-bin/wms
+          url: http://localhost/wms
           layers: water
         coverage:
           bbox: [29.5089,59.6768,30.7204,60.2201]
@@ -38,7 +38,7 @@
       qgisserver_wms:
         type: wms
         req:
-           url: http://localhost/cgi-bin/qgis_mapserv.fcgi?
+           url: http://localhost/qgis
            layers: building_polygon
            transparent: true
         coverage:
@@ -67,7 +67,7 @@
 в самом источнике:
 
     req:
-      url: http://localhost/cgi-bin/wms
+      url: http://localhost/wms
       layers: water,building_polygon
 
 Совмещение собственных данных с данными тайловых сервисов
@@ -84,7 +84,7 @@
       mapserver_wms:
         type: wms
         req:
-          url: http://localhost/cgi-bin/wms
+          url: http://localhost/wms
           layers: railway_station
           transparent: true
         coverage:
@@ -132,6 +132,10 @@
 по WMS на базе MapServer).
 
 ![][03-mapproxy-03]
+
+В QGIS тайловый слой можно подключить, используя следующий URL:
+
+    http://localhost:8080/tiles/merged_layer/EPSG3857/{z}/{x}/{-y}.png
 
 [03-mapproxy-03]: ../img/03-mapproxy-03.png
 

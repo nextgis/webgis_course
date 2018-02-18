@@ -31,23 +31,15 @@ Mapnik предоставляет Python API, что делает возможн
 
 Для установки Mapnik выполним следующую команду:
 
-    sudo aptitude install libmapnik2-2.0 mapnik-utils
+    sudo apt install libmapnik3.0 mapnik-utils
 
 Чтобы убедиться в том, что Mapnik установился успешно, выполните команду:
 
-    python -c "import mapnik2"
+    python -c "import mapnik"
 
 Если в ответ на эту команду не последует никаких сообщение об ошибках, значит
-Mapnik установился корректно. Если же вы получили ошибку:
+Mapnik установился корректно.
 
-    ImportError: No module named mapnik2
-
-то скорее всего это означает, что вы не вышли из виртуального окружения MapProxy.
-Выйдите из него:
-
-    deactivate
-
-и попробуйте выполнить команду заново.
 
 Работа с Mapnik из Python
 -------------------------
@@ -56,15 +48,17 @@ Mapnik поддерживает 2 способа конфигурировани�
 с помощью специального *.xml файла. Рассмотрим первый вариант. Создадим файл
 `test.py` следующего содержания:
 
-    import mapnik2 as mapnik
+    import mapnik
     m = mapnik.Map(1024, 768)
     m.srs = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs'
     m.background = mapnik.Color('steelblue')
     s = mapnik.Style()
     r = mapnik.Rule()
-    polygon_symbolizer = mapnik.PolygonSymbolizer(mapnik.Color('rgb(206,154,156)'))
+    polygon_symbolizer = mapnik.PolygonSymbolizer()
+    polygon_symbolizer.fill = mapnik.Color('rgb(206,154,156)')
     r.symbols.append(polygon_symbolizer)
-    line_symbolizer = mapnik.LineSymbolizer(mapnik.Color('rgb(106, 106, 106)'),1)
+    line_symbolizer = mapnik.LineSymbolizer()
+    line_symbolizer.stroke = mapnik.Color('rgb(106, 106, 106)')
     r.symbols.append(line_symbolizer)
     s.rules.append(r)
     m.append_style('My Style',s)

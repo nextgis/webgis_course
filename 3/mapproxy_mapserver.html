@@ -31,11 +31,11 @@ Mapproxy поддерживает непосредственный вызов р
         type: mapserver
         req:
           layers: water,building
-          map: /home/rykov/nextgis/vega2013/wms.map
+          map: /home/rykovd/wms.map
           transparent: true
         mapserver:
           binary: /usr/lib/cgi-bin/mapserv
-          working_dir: /home/rykov/nextgis/vega2013
+          working_dir: /home/rykovd
 
     grids:
       gridmerc:
@@ -46,7 +46,6 @@ Mapproxy поддерживает непосредственный вызов р
       ex3_cache:
         cache:
             type: mbtiles
-            filename: /home/rykov/nextgis/vega2013/vegamapproxy/cache_data/ex3.mbtiles
         sources: [mapserver_src]
         grids: [gridmerc]
 
