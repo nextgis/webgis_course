@@ -19,7 +19,7 @@
 Для установки Python [MapScript](http://mapserver.org/mapscript/index.html)
 API выполните следующую команду:
 
-    sudo aptitude install python-mapscript
+    sudo apt install python-mapscript
 
 Чтобы убедиться в том, что MapScript установлен корректно, выполните
 команду:
@@ -29,65 +29,39 @@ API выполните следующую команду:
 Если в результате выполнения данной команды вы не увидите никаких сообщений
 об ошибках, значит MapScript установлен корректно.
 
-Cоздание враппера c использования MapScript
+Пример использования MapScript
 -------------------------------------------
 
 Сфера применения MapScript очень широка. Можно, например, в соответствии
 с переданными клиентом параметрами HTTP запроса генерировать каждый
 раз новый map-файл, что открывает возможности создания очень гибких
 сервисов. Можно написать собственные обработчики для различных
-запросов и т.д. В качестве примера напишем универсальный враппер для
-WMS(WFS) запросов.
+запросов и т.д. В качестве примера использования MapScript возьмём
+небольшой фрагмент кода из официальной документации:
 
-В настоящий момент времени адреса веб-сервисов имеют вид:
-
-    http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wms/wms.map&
-    http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wfs/wfs.map&
-
-Как вы можете заметить, в этом случае адрес получается довольно
-длинным, да и к тому же указывается путь до map-файла
-в файловой системе. Если мы переместим наш map-файл в другое место,
-то будем вынуждены сообщить об этом всем клиентам, использующим наш сервис,
-иначе он будет недоступен. Для решения данной проблемы существует
-множество [способов](http://mapserver.org/ogc/wms_server.html#changing-the-online-resource-url),
-рассмотрим один из них.
-
-Переходим в каталог */usr/lib/cgi-bin* и создаём 2 файла *wms* и *wfs*:
-
-    cd /usr/lib/cgi-bin
-    sudo touch wms
-    sudo touch wfs
-
-В каждый файл помещаем следующий код. Для *wms*:
-
-    #!/usr/bin/python
     import mapscript
+
     req = mapscript.OWSRequest()
     req.loadParams()
-    map = mapscript.mapObj('/home/rykovd/wms/wms.map')
-    map.OWSDispatch(req)
 
-Для *wfs*:
+    map = mapscript.mapObj( '/u/www/maps/ukpoly/ukpoly.map' )
 
-    #!/usr/bin/python
-    import mapscript
-    req = mapscript.OWSRequest()
-    req.loadParams()
-    map = mapscript.mapObj('/home/rykovd/wfs/wfs.map')
-    map.OWSDispatch(req)
+    mapscript.msIO_installStdoutToBuffer()
+    map.OWSDispatch( req )
 
-Делаем их исполняемыми:
+    content_type = mapscript.msIO_stripStdoutBufferContentType()
+    content = mapscript.msIO_getStdoutBufferBytes()
 
-    sudo chmod o+x wms
-    sudo chmod o+x wfs
+    if content_type == 'vnd.ogc.se_xml':
+      content_type = 'text/xml'
 
-Затем в файлах *wms.map* и *wfs.map* изменим значение **wms_onlineresource**
-и **wfs_onlineresource** на:
+    print 'Content-type: ' + content_type
+    print
+    print content
 
-    http://10.22.0.9/cgi-bin/wms?
-    http://10.22.0.9/cgi-bin/wfs?
-
-Проверьте результат на примере подключения в QGIS.
+В данном примере мы с помощью MapScript изменяем заголовок
+`Content-Type` на нестандартный, который позволяет отображать
+ошибки непосредственно в браузере, а не загружать их в виде файла.
 
 </xmp>
 <script src="../strapdown/v/0.2/strapdown.js"></script>

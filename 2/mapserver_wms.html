@@ -32,10 +32,11 @@
 поля и запишем в них трансформированные в проекцию `EPSG:3857` 
 (используемую большинством онлайн-сервисов) варианты оригинальных геометрий:
 
-    SELECT AddGeometryColumn('building_polygon', 'webmercator', 3857, 'MULTIPOLYGON', 2);
-    SELECT AddGeometryColumn('water_polygon', 'webmercator', 3857, 'POLYGON', 2);
-    SELECT AddGeometryColumn('highway_line', 'webmercator', 3857, 'MULTILINESTRING', 2);
-    SELECT AddGeometryColumn('railway_station_point', 'webmercator', 3857, 'POINT', 2);
+
+    ALTER TABLE building_polygon ADD COLUMN webmercator geometry(MultiPolygon, 3857);
+    ALTER TABLE water_polygon ADD COLUMN webmercator geometry(Polygon, 3857);
+    ALTER TABLE highway_line ADD COLUMN webmercator geometry(MultiLinestring, 3857);
+    ALTER TABLE railway_station_point ADD COLUMN webmercator geometry(Point, 3857);
 
     UPDATE building_polygon SET webmercator = ST_Transform(wkb_geometry, 3857);
     UPDATE water_polygon SET webmercator = ST_Transform(wkb_geometry, 3857);
@@ -59,8 +60,8 @@
 Публикация данных по WMS
 ------------------------
 
-Для публикации данных в виде WMS-сервиса создайте файл следующего содержания
-(заменив путь до map-файла на собственный):
+Для публикации данных в виде WMS-сервиса создайте
+в домашней директории файл `wms.map` следующего содержания:
 
     MAP
 
@@ -85,7 +86,7 @@
       WEB
         METADATA
           "wms_title"          "WMS Demo Server for MapServer"
-          "wms_onlineresource" "http://10.22.0.9/cgi-bin/mapserv?map=/home/rykovd/wms/wms.map&"
+          "wms_onlineresource" "http://10.22.0.9/wms"
           "wms_srs"            "EPSG:4326 EPSG:3857"
           "wms_abstract"       "Saint Petersburg demo WMS"
           "wms_enable_request" "*"

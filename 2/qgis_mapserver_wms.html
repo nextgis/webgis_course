@@ -28,68 +28,30 @@
 
 Для установки QGIS Mapserver установим следующие пакеты:
 
-     sudo aptitude install qgis-mapserver libapache2-mod-fcgid
+    sudo apt install qgis-mapserver
 
-И перезапустим Apache:
+Публикация проекта QGIS
+-----------------------
 
-    sudo service apache2 restart
+В качестве готового проекта возьмём файл `/home/rykovd/RU-SPE/qgis-mapnik.qgs`.
+Фрагмент файла настроек nginx:
 
-Чтобы проверить, что QGIS Mapserver установился корректно, откроем в
-браузере следующую страницу:
+    location /qgis {
+        fastcgi_pass                     unix:/var/run/fcgiwrap.socket;
+        fastcgi_param SCRIPT_FILENAME    /usr/lib/cgi-bin/qgis_mapserv.fcgi;
+        fastcgi_param QGIS_PROJECT_FILE  /home/rykovd/RU-SPE/qgis-mapnik.qgs;
+        fastcgi_param REQUEST_METHOD     $request_method;
+        fastcgi_param QUERY_STRING       $query_string;
+    }
 
-    http://10.22.0.9/cgi-bin/qgis_mapserv.fcgi?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities
-
-Если по указанному адресу открывается страница, представляющая собой
-ответ сервера GetCapabilities, значит QGIS Mapserver установился корректно.
-
-Создание проекта QGIS
----------------------
-
-1. Запускаем QGIS (1.8) и добавляем в проект 4 слоя из базы данных
-   PostGIS `dbvega`;
-
-2. Настраиваем символику и изменяем имена в списке слоёв на следующие:
-
-   * **Водоёмы** - цвет заливки (181 210 214), без обводки;
-   * **Здания** - цвет заливки (206 154 156), обводки (106 106 106);
-   * **Железнодорожные станции** - значок из библиотеки символов *station.svg*
-     (размер 5);
-   * **Дороги** - первый слой - толщина 1.4, цвет(0 0 0), второй слой -
-     толщина 1, цвет (255 255 255).
-
-   Должна получиться вот-такая картина:
-
-   ![][02-qgis-mapserver-01]
-
-3. В меню *Файл* выбираем *Сохранить проект как* и сохраняем проект под
-   именем *qgis-mapserver-1.8.qgs*.
-
-
-Публикация проекта
-------------------
-
-1. На сервере переходим в каталог */usr/lib/cgi-bin*, создаём в нём
-   ещё один каталог *vega*, и делаем необходимый симлинк:
-
-       cd /usr/lib/cgi-bin
-       sudo mkdir vega
-       cd vega
-       sudo ln -s ../qgis_mapserv.fcgi .
-
-2. Копируем файл *qgis-mapserver-1.8.qgs* в директорию */usr/lib/cgi-bin/vega*;
-
-3. Перезапускаем Apache:
-
-       sudo service apache2 restart
-
-4. В QGIS создаём подключение к WMS-серверу `http://10.22.0.9/cgi-bin/vega/qgis_mapserv.fcgi`,
-   при этом отмечаем пункты *Игнорировать URI запроса GetMap* и *Игнорировать
-   URI запроса GetFeatureInfo*:
+Проверяем результат. Для этого в QGIS создаём подключение к WMS-серверу
+`http://10.22.0.9/qgis`, при этом отмечаем пункты
+*Игнорировать URI запроса GetMap* и *Игнорировать URI запроса GetFeatureInfo*:
 
    ![][02-qgis-mapserver-02]
 
-5. Подключаемся к созданному подключению и добавляем на карту WMS-слои, убеждаясь в
-   том, что они имеют такое же оформление, как и в проекте QGIS.
+Подключаемся к созданному подключению и добавляем на карту WMS-слои, убеждаясь в
+том, что они имеют такое же оформление, как и в проекте QGIS.
 
 [02-qgis-mapserver-01]: ../img/02-qgis-mapserver-01.png
 [02-qgis-mapserver-02]: ../img/02-qgis-mapserver-02.png
